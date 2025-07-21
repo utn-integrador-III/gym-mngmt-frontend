@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import Login from './pages/auth/Login';
 import './styles/auth/login.css';
+import CreateExercise from './pages/trainers/CreateExercise';
+import './styles/trainers/CreateExercise.css';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -13,6 +15,7 @@ root.render(
     <Login />
   </React.StrictMode>
 );
+//<CreateExercise /> 
 
 
 reportWebVitals();
