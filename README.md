@@ -21,7 +21,7 @@ cd gym-mngmt-frontend
 2. Install dependencies
 
 ### npm install
-
+### npm install react-router-dom
 ### `npm start`
 
 Runs the app in the development mode.\
