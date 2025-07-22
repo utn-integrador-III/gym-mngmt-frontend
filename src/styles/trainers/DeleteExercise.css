@@ -1,0 +1,110 @@
+/* import '@fortawesome/fontawesome-free/css/all.min.css'; */
+
+.delete-exercise-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background-color: white;
+  padding: 2rem 1rem 5rem;
+  box-sizing: border-box;
+}
+
+.delete-card {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  background-color: #fff;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-logo {
+  height: 30px;
+  width: 30px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.input, .textarea {
+  padding: 0.5rem;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.textarea {
+  resize: none;
+  height: 80px;
+}
+
+.delete-button {
+  background-color: #e53935;
+  color: white;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+  background-color: #c62828;
+}
+
+/* Barra de iconos */
+.bottom-navigation {
+  margin-top: 1.5rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #ddd;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-around;
+  justify-content: space-evenly; /* <--- Aquí está la clave */
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: black;
+  cursor: pointer;
+}
