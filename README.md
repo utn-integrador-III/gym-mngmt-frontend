@@ -24,5 +24,8 @@ cd gym-mngmt-frontend
 ### npm install react-router-dom
 ### `npm start`
 
+### instalar dependencias necesarias de react-scripts que estan en el package.json si fuera el caso que se necesite.
+###  npm install react-scripts --save
+
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.

@@ -1,22 +1,20 @@
-import React, { useState } from "react";
-import '../../styles/trainers/CreateExercise.css';
+import React, { useState } from 'react';
+import '../../styles/trainers/DeleteExercise.css';
 import logo from '../../assets/images/logo.jpg';
 
-const CreateExercise: React.FC = () => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+const DeleteExercise: React.FC = () => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleDelete = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ name, description });
+    console.log('Deleting:', { name, description });
   };
 
   return (
-    <div className="create-exercise-container">
-      {/* Tarjeta completa */}
-      <div className="create-card">
-        
-        {/* Logo y título */}
+    <div className="delete-exercise-container">
+      <div className="delete-card">
+        {/* Encabezado */}
         <header className="header">
           <img src={logo} alt="Logo" className="login-logo" />
           <h1 className="title">GYM KSG</h1>
@@ -24,8 +22,8 @@ const CreateExercise: React.FC = () => {
 
         {/* Formulario */}
         <main className="content">
-          <h2 className="page-title">Create exercise</h2>
-          <form className="form" onSubmit={handleSubmit}>
+          <h2 className="page-title">Delete exercise</h2>
+          <form className="form" onSubmit={handleDelete}>
             <label className="label">Name</label>
             <input
               className="input"
@@ -38,17 +36,18 @@ const CreateExercise: React.FC = () => {
             <label className="label">Description</label>
             <textarea
               className="textarea"
-              placeholder="You can add a link to guide the clients"
+              placeholder="It´s the link"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            <button type="submit" className="save-button">
-              Save
+            <button type="submit" className="delete-button">
+              DELETE
             </button>
           </form>
         </main>
- {/* Barra inferior */}
+
+        {/* Barra inferior */}
         <div className="bottom-navigation">
           <button className="nav-button"><i className="fas fa-home"></i></button>
           <button className="nav-button"><i className="fas fa-user-plus"></i></button>
@@ -57,8 +56,7 @@ const CreateExercise: React.FC = () => {
         </div>
       </div>
     </div>
-
   );
 };
 
-export default CreateExercise;
+export default DeleteExercise;
