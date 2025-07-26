@@ -34,12 +34,12 @@ export default function TrainerMenu() {
         </div>
       </div>
 
-      <div className="nav-bar">
-        <span className="nav-icon" role="img" aria-label="home">🏠</span>
-        <span className="nav-icon" role="img" aria-label="add-user">👤➕</span>
-        <span className="nav-icon" role="img" aria-label="clipboard">📋</span>
-        <span className="nav-icon" role="img" aria-label="profile">👤</span>
-      </div>
+         <div className="bottom-navigation">
+          <button className="nav-button"><i className="fas fa-home"></i></button>
+          <button className="nav-button"><i className="fas fa-user-plus"></i></button>
+          <button className="nav-button"><i className="fas fa-clipboard-list"></i></button>
+          <button className="nav-button"><i className="fas fa-user"></i></button>
+        </div>
     </div>
   );
 }
