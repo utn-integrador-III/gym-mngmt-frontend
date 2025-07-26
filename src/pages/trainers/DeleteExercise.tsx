@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../styles/trainers/DeleteExercise.css';
+import '../../styles/trainers/deleteExercise.css';
 import logo from '../../assets/images/logo.jpg';
 
 const DeleteExercise: React.FC = () => {

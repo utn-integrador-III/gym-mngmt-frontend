@@ -55,3 +55,19 @@
 .login-button:hover {
   background-color: #1e4ed8; /* un tono más oscuro para hover */
 }
+
+.register-link {
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.register-link:hover {
+  color: #1e4ed8;
+}

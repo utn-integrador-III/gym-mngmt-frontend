@@ -1,15 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/auth/login.css';
 import logo from '../../assets/images/logo.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Logging in with:', email, password);
-    //  lógica de autenticación xd
+    // lógica de login aquí
   };
 
   return (
@@ -38,6 +40,14 @@ export default function Login() {
 
         <button type="submit" className="login-button">
           Iniciar sesión
+        </button>
+
+        <button
+          type="button"
+          className="register-link"
+          onClick={() => navigate('/register')}
+        >
+          Don't have an account? Register
         </button>
       </form>
     </div>
