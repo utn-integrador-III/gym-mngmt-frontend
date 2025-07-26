@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../styles/trainers/CreateRoutine.css';
+import '../../styles/trainers/createRoutine.css';
 import logo from '../../assets/images/logo.jpg';
 
 

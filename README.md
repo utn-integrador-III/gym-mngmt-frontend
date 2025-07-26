@@ -22,6 +22,8 @@ cd gym-mngmt-frontend
 
 ### npm install
 ### npm install react-router-dom
+### npm install @fortawesome/fontawesome-free
+
 ### `npm start`
 
 ### instalar dependencias necesarias de react-scripts que estan en el package.json si fuera el caso que se necesite.
