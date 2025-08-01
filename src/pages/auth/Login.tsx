@@ -8,11 +8,43 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Logging in with:', email, password);
-    // lógica de login aquí
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const loginData = {
+    email,
+    password
   };
+
+  try {
+    const res = await fetch("http security mod /login ", { // Esperando xd
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(loginData)
+    });
+
+    const result = await res.json();
+    
+
+    if (res.ok && result.token) {
+      // Save token in localStorage
+      localStorage.setItem("session_token", result.token);
+      alert("Login exitoso");
+
+      navigate("/index"); // Redirect to index
+
+
+    } else {
+      alert(result.detail || "Credenciales inválidas");
+    }
+  } catch (error) {
+    console.error("[ERROR LOGIN]", error);
+    alert("Error al intentar iniciar sesión");
+  }
+};
+
 
   return (
     <div className="login-container">
