@@ -106,10 +106,10 @@
 }
 
 .nav-button {
-  font-size: 2.4rem;
-  padding: 2.5rem;
-  cursor: pointer;
-  color: black;
   background: none;
   border: none;
+  font-size: 1.0rem;
+  color: black;
+  padding: 25px;
+  cursor: pointer;
 }
