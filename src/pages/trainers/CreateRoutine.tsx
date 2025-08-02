@@ -1,19 +1,92 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../styles/trainers/createRoutine.css';
 import logo from '../../assets/images/logo.jpg';
 
+const EXERCISES_API_URL = 'http://localhost:8000/exercises';
+const ROUTINE_API_URL = 'http://localhost:8000/daily_routines';
+
+// ID del entrenador (puedes cambiarlo según tu sesión)
+const ID_COACH = '60f7f9e0c8c8a2f1d8d0b9f5';
 
 const CreateRoutine: React.FC = () => {
   const [numExercises, setNumExercises] = useState(4);
+  const [exerciseList, setExerciseList] = useState<any[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [routineName, setRoutineName] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const res = await fetch(EXERCISES_API_URL);
+        const data = await res.json();
+        setExerciseList(data);
+        setSelectedExercises(Array(numExercises).fill(''));
+      } catch (error) {
+        console.error('Error al obtener ejercicios:', error);
+      }
+    };
+
+    fetchExercises();
+  }, []);
+
+  useEffect(() => {
+    setSelectedExercises(Array(numExercises).fill(''));
+  }, [numExercises]);
+
+  const handleExerciseChange = (index: number, value: string) => {
+    const updated = [...selectedExercises];
+    updated[index] = value;
+    setSelectedExercises(updated);
+  };
+
+  const handleSaveRoutine = async () => {
+    if (!routineName.trim()) {
+      setStatusMessage('❌ Debes ingresar un nombre para la rutina.');
+      return;
+    }
+
+    if (selectedExercises.some((id) => !id)) {
+      setStatusMessage('❌ Debes seleccionar todos los ejercicios.');
+      return;
+    }
+
+    try {
+      for (const id_exercise of selectedExercises) {
+        const res = await fetch(ROUTINE_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_coach: ID_COACH,
+            id_exercise,
+            name: routineName,
+          }),
+        });
+
+        if (!res.ok) throw new Error('Error al guardar un ejercicio.');
+      }
+
+      setStatusMessage('✅ Rutina guardada exitosamente.');
+    } catch (error) {
+      console.error('Error al guardar la rutina:', error);
+      setStatusMessage('❌ Error al guardar la rutina. Ver consola para más detalles.');
+    }
+  };
 
   const renderExerciseSelectors = () => {
     return Array.from({ length: numExercises }, (_, i) => (
-      <select key={i} className="exercise-select">
-        <option disabled>Exercise {i + 1}</option>
-        <option>Push-ups</option>
-        <option>Squats</option>
-        <option>Planks</option>
-        <option>Burpees</option>
+      <select
+        key={i}
+        className="exercise-select"
+        value={selectedExercises[i] || ''}
+        onChange={(e) => handleExerciseChange(i, e.target.value)}
+      >
+        <option value="">Selecciona ejercicio {i + 1}</option>
+        {exerciseList.map((exercise) => (
+          <option key={exercise._id} value={exercise._id}>
+            {exercise.name}
+          </option>
+        ))}
       </select>
     ));
   };
@@ -32,8 +105,10 @@ const CreateRoutine: React.FC = () => {
 
         <input
           type="text"
-          placeholder="Routines name"
+          placeholder="Routine name"
           className="input"
+          value={routineName}
+          onChange={(e) => setRoutineName(e.target.value)}
         />
 
         <p className="instruction">
@@ -55,16 +130,17 @@ const CreateRoutine: React.FC = () => {
           {renderExerciseSelectors()}
         </div>
 
-        <button className="save-button">Save</button>
+        <button className="save-button" onClick={handleSaveRoutine}>Save</button>
+        {statusMessage && <p className="status-message">{statusMessage}</p>}
       </div>
 
-     {/* Barra inferior */}
-        <div className="bottom-navigation">
-          <button className="nav-button"><i className="fas fa-home"></i></button>
-          <button className="nav-button"><i className="fas fa-user-plus"></i></button>
-          <button className="nav-button"><i className="fas fa-clipboard-list"></i></button>
-          <button className="nav-button"><i className="fas fa-user"></i></button>
-        </div>
+      {/* Bottom Navigation */}
+      <div className="bottom-navigation">
+        <button className="nav-button"><i className="fas fa-home"></i></button>
+        <button className="nav-button"><i className="fas fa-user-plus"></i></button>
+        <button className="nav-button"><i className="fas fa-clipboard-list"></i></button>
+        <button className="nav-button"><i className="fas fa-user"></i></button>
+      </div>
     </div>
   );
 };

@@ -1,14 +1,74 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../styles/trainers/deleteExercise.css';
 import logo from '../../assets/images/logo.jpg';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
+//import { deleteExercise, getExercises } from '../../api/exerciseApi';
+
+const API_URL = 'http://localhost:8000/exercises'; // o tu endpoint real
+
+export const getExercises = async () => {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('No se pudieron obtener los ejercicios');
+    return await res.json();
+  } catch (error) {
+    console.error('Error al obtener ejercicios:', error);
+    return [];
+  }
+};
+
+export const deleteExercise = async (id: string) => {
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!res.ok) throw new Error('No se pudo eliminar el ejercicio');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Error desconocido al eliminar' };
+  }
+};
+
+
+interface Exercise {
+  _id: string;
+  name: string;
+  description: string;
+}
 
 const DeleteExercise: React.FC = () => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [selectedId, setSelectedId] = useState('');
 
-  const handleDelete = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchExercises = async () => {
+      const data = await getExercises();
+      setExercises(data);
+    };
+    fetchExercises();
+  }, []);
+
+  const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Deleting:', { name, description });
+
+    if (!selectedId) {
+      alert('Please select an exercise to delete');
+      return;
+    }
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this exercise?');
+    if (!confirmDelete) return;
+
+    const result = await deleteExercise(selectedId);
+    if (result.success) {
+      alert('Exercise deleted successfully!');
+      setExercises((prev) => prev.filter((ex) => ex._id !== selectedId));
+      setSelectedId('');
+    } else {
+      alert(`Error: ${result.error}`);
+    }
   };
 
   return (
@@ -22,24 +82,21 @@ const DeleteExercise: React.FC = () => {
 
         {/* Formulario */}
         <main className="content">
-          <h2 className="page-title">Delete exercise</h2>
+          <h2 className="page-title">Delete Exercise</h2>
           <form className="form" onSubmit={handleDelete}>
-            <label className="label">Name</label>
-            <input
+            <label className="label">Select Exercise</label>
+            <select
               className="input"
-              type="text"
-              placeholder="Value"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-
-            <label className="label">Description</label>
-            <textarea
-              className="textarea"
-              placeholder="It´s the link"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+            >
+              <option value="">-- Choose an exercise --</option>
+              {exercises.map((exercise) => (
+                <option key={exercise._id} value={exercise._id}>
+                  {exercise.name}
+                </option>
+              ))}
+            </select>
 
             <button type="submit" className="delete-button">
               DELETE

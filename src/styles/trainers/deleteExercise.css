@@ -1,111 +1,123 @@
-/* import '@fortawesome/fontawesome-free/css/all.min.css'; */
-
 .delete-exercise-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   min-height: 100vh;
-  background-color: white;
-  padding: 2rem 1rem 5rem;
+  background-color: #f8f9fa;
+  padding: 2rem 1rem;
   box-sizing: border-box;
+  flex-direction: column; /* si vas a tener footer abajo */
 }
 
 .delete-card {
   width: 100%;
-  max-width: 400px;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  position: relative;
-  background-color: #fff;
+  max-width: 420px;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  justify-content: space-between;
+  margin-bottom: 2.5rem; /* un poco más espacio */
 }
 
 .login-logo {
-  height: 30px;
-  width: 30px;
+  height: 35px;
+  width: 35px;
   object-fit: contain;
+  margin-right: 10px;
 }
 
 .title {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
+  font-size: 1.3rem;
+  font-weight: 700;
 }
 
 .page-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 1.5rem;
 }
 
 .label {
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
   font-weight: 500;
 }
 
-.input, .textarea {
-  padding: 0.5rem;
-  border: 1px solid #aaa;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+.input,
+.textarea,
+select {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
   width: 100%;
+  margin-bottom: 1.4rem;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s;
+}
+
+.input:focus,
+.textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #007bff;
+  background-color: #fff;
 }
 
 .textarea {
   resize: none;
-  height: 80px;
+  height: 90px;
 }
 
 .delete-button {
   background-color: #e53935;
   color: white;
-  padding: 0.6rem;
+  padding: 0.7rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  margin-top: 0.5rem;
 }
 
 .delete-button:hover {
   background-color: #c62828;
 }
 
-/* Barra de iconos */
 .bottom-navigation {
-  margin-top: 1.5rem;
-  padding-top: 0.7rem;
+  margin-top: 2rem;
+  padding: 0.8rem 1rem;
   border-top: 1px solid #ddd;
   background-color: #fff;
   display: flex;
   justify-content: space-around;
-  justify-content: space-evenly; /* <--- Aquí está la clave */
+  align-items: center;
 }
 
 .nav-button {
   background: none;
   border: none;
-  padding: 25px;
-  font-size: 1.0rem;
-  color: black;
+  font-size: 1.6rem;
+  color: #333;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: color 0.3s ease;
+  padding: 0;
+}
+
+.nav-button:hover {
+  color: #007bff;
 }
