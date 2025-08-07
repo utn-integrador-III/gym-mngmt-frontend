@@ -6,7 +6,7 @@ const EXERCISES_API_URL = 'http://localhost:8000/exercises';
 const ROUTINE_API_URL = 'http://localhost:8000/daily_routines';
 
 // ID del entrenador (puedes cambiarlo según tu sesión)
-const ID_COACH = '60f7f9e0c8c8a2f1d8d0b9f5';
+const ID_COACH = '687f547185ef227c4a6ae903';
 
 const CreateRoutine: React.FC = () => {
   const [numExercises, setNumExercises] = useState(4);
@@ -40,38 +40,38 @@ const CreateRoutine: React.FC = () => {
     setSelectedExercises(updated);
   };
 
-  const handleSaveRoutine = async () => {
-    if (!routineName.trim()) {
-      setStatusMessage('❌ Debes ingresar un nombre para la rutina.');
-      return;
-    }
+ const handleSaveRoutine = async () => {
+  if (!routineName.trim()) {
+    setStatusMessage('❌ Debes ingresar un nombre para la rutina.');
+    return;
+  }
 
-    if (selectedExercises.some((id) => !id)) {
-      setStatusMessage('❌ Debes seleccionar todos los ejercicios.');
-      return;
-    }
+  if (selectedExercises.some((id) => !id)) {
+    setStatusMessage('❌ Debes seleccionar todos los ejercicios.');
+    return;
+  }
 
-    try {
-      for (const id_exercise of selectedExercises) {
-        const res = await fetch(ROUTINE_API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id_coach: ID_COACH,
-            id_exercise,
-            name: routineName,
-          }),
-        });
+  try {
+    const res = await fetch(ROUTINE_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_coach: ID_COACH,
+        id_exercise: selectedExercises,
+        name: routineName,
+      }),
+    });
 
-        if (!res.ok) throw new Error('Error al guardar un ejercicio.');
-      }
+    if (!res.ok) throw new Error('Error al guardar la rutina.');
 
-      setStatusMessage('✅ Rutina guardada exitosamente.');
-    } catch (error) {
-      console.error('Error al guardar la rutina:', error);
-      setStatusMessage('❌ Error al guardar la rutina. Ver consola para más detalles.');
-    }
+    setStatusMessage('✅ Rutina guardada exitosamente.');
+  } catch (error) {
+    console.error('Error al guardar la rutina:', error);
+    setStatusMessage('❌ Error al guardar la rutina. Ver consola para más detalles.');
+  }
   };
+
+
 
   const renderExerciseSelectors = () => {
     return Array.from({ length: numExercises }, (_, i) => (
