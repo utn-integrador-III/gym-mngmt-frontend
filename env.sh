@@ -6,4 +6,6 @@ window.env = {
 };
 EOF
 
+#start nginx
 exec "$@"
+
