@@ -1,0 +1,115 @@
+.create-exercise-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f3f4f6;
+  font-family: Arial, sans-serif;
+}
+
+/* Tarjeta completa */
+.create-card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+.header {
+  display: flex;
+  flex-direction: row;       /* Coloca logo y texto en fila */
+  align-items: center;       /* Centra verticalmente */
+  justify-content: center;   /* Centra todo dentro de la tarjeta */
+  gap: 10px;                 /* Espacio entre logo y texto */
+  margin-bottom: 1rem;
+}
+
+.login-logo {
+  width: 50px;               /* Ajusta el tamaño del logo */
+  height: auto;
+  margin: 0;                 /* Quitamos el margin-bottom que tenía */
+}
+
+.title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Contenido (formulario) */
+.content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.save-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+  background-color: #0056b3;
+}
+
+/* Barra de iconos */
+.bottom-navigation {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 1rem 1rem;
+  height: 70px;
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  font-size: 1.0rem;
+  color: black;
+  padding: 25px;
+  cursor: pointer;
+}
