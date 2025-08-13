@@ -11,6 +11,7 @@ import ClientList from './pages/trainers/ClientList';
 import AssignRoutine from './pages/trainers/AssignRoutine';
 import ClientTodayRoutine from './pages/clients/ClientTodayRoutine'; 
 import UserProfile from './pages/profile/UserProfile';
+import EditRoutine from './pages/trainers/EditRoutine';
 
 
 import './styles/auth/login.css';
@@ -23,6 +24,7 @@ import './styles/trainers/clientList.css';
 import './styles/trainers/assignRoutine.css';
 import './styles/clients/todayRoutine.css';
 import './styles/profile/userProfile.css';
+import './styles/trainers/editRoutine.css';
 
 function App() {
   return (
@@ -39,7 +41,10 @@ function App() {
         <Route path="/assignRoutine" element={<AssignRoutine />} />
         <Route path="/clientTodayRoutine" element={<ClientTodayRoutine />} />
         <Route path="/userProfile" element={<UserProfile />} />
+        <Route path="/editRoutine" element={<EditRoutine />} />
+
       </Routes>
+
     </BrowserRouter>
     
   );
