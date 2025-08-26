@@ -1,0 +1,45 @@
+# Documentación del Trabajo: Sistema de Gestión de Gimnasio (Frontend)
+
+## Descripción General
+Este proyecto es un frontend desarrollado en React (TypeScript) para la gestión de un gimnasio, permitiendo a entrenadores y clientes interactuar con rutinas, ejercicios y asignaciones diarias. El sistema se comunica con una API backend (por ejemplo, FastAPI) para operaciones CRUD.
+
+## Estructura de Carpetas
+- **src/pages/**: Contiene las páginas principales del sistema, separadas por roles (entrenadores, clientes, autenticación).
+- **src/services/**: Servicios centralizados para interactuar con la API (fetch, POST, DELETE, etc.) para ejercicios, rutinas diarias, rutinas asignadas, etc.
+- **src/core/**: Configuración general y utilidades (por ejemplo, http.ts para peticiones genéricas y config.ts para la URL base).
+- **src/assets/**: Imágenes y recursos estáticos.
+
+## Principales Funcionalidades
+- **Autenticación**: Redirección y validación de sesión según el rol del usuario (`src/pages/auth/IndexRedirect.tsx`).
+- **Gestión de Ejercicios**:
+  - Crear, listar y eliminar ejercicios (`CreateExercise.tsx`, `DeleteExercise.tsx`).
+  - Servicios centralizados en `exercisesService.ts`.
+- **Gestión de Rutinas**:
+  - Crear rutinas diarias asociando ejercicios (`CreateRoutine.tsx`).
+  - Asignar rutinas a clientes (en desarrollo/ajustar según backend).
+  - Servicios en `dailyRoutinesService.ts` y `assignedRoutinesService.ts`.
+- **Vista de Cliente**:
+  - Visualización de la rutina asignada del día, marcar como realizada, agregar notas (`ClientTodayRoutine.tsx`).
+
+## Servicios Centralizados
+Todos los servicios usan fetch y la constante `BACKEND_BASE_URL` definida en `src/core/config.ts`. Se recomienda usar la función `http` de `src/core/http.ts` para estandarizar las peticiones y manejo de errores.
+
+## Consideraciones Técnicas
+- **TypeScript**: Tipado estricto en servicios y componentes.
+- **Manejo de Estado**: Uso de hooks (`useState`, `useEffect`).
+- **Estilos**: Archivos CSS separados por página.
+- **Componentización**: Separación clara entre lógica de negocio (servicios) y presentación (componentes/páginas).
+
+## Pendientes y Mejoras
+- Unificar el uso de la función `http` en todos los servicios.
+- Mejorar la experiencia de usuario y validaciones de formularios.
+- Modularizar navegación y layout.
+- Ajustar endpoints y shape de datos según el backend definitivo.
+
+## Autores y Créditos
+- Desarrolladores: [Nombres del equipo]
+- Universidad Tecnológica Nacional (UTN) - Proyecto Integrador III
+
+---
+
+> **Nota:** Para más detalles sobre endpoints, revisar los archivos en `src/services/` y la documentación del backend.

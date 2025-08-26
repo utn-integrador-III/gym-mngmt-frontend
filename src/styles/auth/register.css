@@ -1,67 +1,115 @@
+/* === Reset pequeño para evitar que el padding “empuje” los inputs === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* === Página y tarjeta (glassmorphism) === */
 .register-container {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: column;         /* deja el botón de volver debajo del form */
+  justify-content: center;
   align-items: center;
-  padding: 2rem 1rem;
-  background-color: #fff;
+  padding: 24px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  color: #f8fafc;
 }
 
 .register-title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
+  margin: 0 0 12px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
 }
 
+/* Tarjeta */
 .register-form {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  width: min(460px, 92vw);
+  padding: 28px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.45), inset 0 0 0 1px rgba(255,255,255,0.06);
+
+  display: grid;
+  gap: 16px;
 }
 
+/* Inputs y selects */
 .register-input {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.16);   /* color de fondo */
+  color: #90a6bd; 
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
+.register-input::placeholder {
+  color: rgba(248, 250, 252, 0.55);
+}
+
+.register-input:focus {
+  border-color: rgba(125, 211, 252, 0.8);
+  box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.18);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Mejora de select en navegadores */
+.register-input[type="text"],
+.register-input[type="tel"],
+.register-input[type="url"],
+.register-input[type="email"],
+.register-input[type="password"],
+.register-input:not([type]) {
+  appearance: none;
+}
+
+/* Botón principal */
 .register-button {
-  padding: 0.75rem;
-  background-color: #2563eb;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.20);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7dd3fc, #a78bfa);
+  color: #0b1220;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease;
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.28),
+              0 6px 14px rgba(125, 211, 252, 0.20);
 }
 
 .register-button:hover {
-  background-color: #1e4ed8;
+  transform: translateY(-1px);
+  filter: saturate(1.06);
+  box-shadow: 0 16px 40px rgba(124, 58, 237, 0.35),
+              0 10px 24px rgba(125, 211, 252, 0.25);
 }
 
-.back-button {
-  margin-top: 1.5rem;
-  padding: 0.75rem;
-  width: 100%;
-  max-width: 400px;
-  background-color: #a1a1aa;
-  color: white;
-  font-weight: bold;
+/* Botón “volver” debajo del formulario */
+.back-button  {
+  margin-top: 12px;
+  background: none;
   border: none;
-  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.3s;
+  text-decoration: underline;
+  padding: 6px 8px;
+  align-self: center; /* centra respecto al contenedor */
 }
 
-.back-button:hover {
-  background-color: #71717a;
+/* Responsive pequeño */
+@media (max-width: 420px) {
+  .register-form { padding: 22px; }
+  .register-title   { font-size: 1.4rem; }
 }

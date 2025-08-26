@@ -1,101 +1,147 @@
-import React, { useState } from "react";
-import '../../styles/trainers/createExercise.css';
-import logo from '../../assets/images/logo.jpg';
-/*import { createExercise } from '../../conection/exerciseService';*/
-/*const API_URL = "http://127.0.0.1:8000/exercises/";*/
+import { useState, useMemo } from "react";
+import { createExercise } from "../../services/exercisesService";
+import "../../styles/trainers/createExercise.css";
 
-const createExercise = async (name: string, description: string) => {
-  try {
-    const res = await fetch("http://localhost:8000/exercises/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, description }),
-    });
+import { useNavigate } from "react-router-dom";  // ⬅️ arriba
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Error creando ejercicio");
-    }
+const NAME_MAX = 60;
+const DESC_MAX = 320;
 
-    return await res.json();
-  } catch (error) {
-    console.error("Error en createExercise:", error);
-    if (error instanceof Error) return { error: error.message };
-    return { error: "Error desconocido" };
-  }
-};
-
-const CreateExercise = () => {
+export default function CreateExercise() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
 
-  const handleSave = async () => {
-    if (!name || !description) {
-      alert("Completa todos los campos");
+  const nameLen = name.trim().length;
+  const descLen = description.trim().length;
+
+  const nameValid = nameLen >= 3 && nameLen <= NAME_MAX;
+  const descValid = descLen <= DESC_MAX;
+  const formValid = nameValid && descValid;
+
+  const namePct = useMemo(() => Math.min(100, Math.round((nameLen / NAME_MAX) * 100)), [nameLen]);
+  const descPct = useMemo(() => Math.min(100, Math.round((descLen / DESC_MAX) * 100)), [descLen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setOk(null);
+    if (!formValid) {
+      setError("Revisa los campos marcados.");
       return;
     }
-
-    const result = await createExercise(name, description);
-    console.log("Resultado:", result);
-
-    if (result.error) {
-      alert("Error: " + result.error);
-    } else {
-      alert("Ejercicio creado con éxito");
+    try {
+      setSaving(true);
+      await createExercise({
+        name: name.trim(),
+        description: description.trim() || undefined,
+      });
+      setOk("Ejercicio creado ✅");
       setName("");
       setDescription("");
+      // ocultar el toast luego de 2.5s
+      setTimeout(() => setOk(null), 2500);
+    } catch (err: any) {
+      setError(err?.message ?? "Error creando ejercicio");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="create-exercise-container">
-      <div className="create-card">
-        <header className="header">
-          <img src={logo} alt="Logo" className="login-logo" />
-          <h1 className="title">GYM KSG</h1>
-        </header>
+    <div className="create-wrap">
+      <div className="card fancy">
+        <div className="card-head">
+          <div className="logo-bubble" aria-hidden>🏋️</div>
+          <div>
+            <h2 className="title">Crear ejercicio</h2>
+            <p className="subtitle">Agrega un nuevo ejercicio al catálogo.</p>
+          </div>
+          <span className="chip">Nuevo</span>
+        </div>
 
-        <main className="content">
-          <h2 className="page-title">Create exercise</h2>
-          <form
-            className="form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-          >
-            <label className="label">Name</label>
+        <form className="form" onSubmit={handleSubmit} noValidate>
+          {/* Nombre */}
+          <div className={`field ${!nameValid && nameLen ? "invalid" : ""}`}>
+            <label className="label">Nombre</label>
             <input
               className="input"
-              type="text"
-              placeholder="Value"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Push Ups"
+              maxLength={NAME_MAX}
+              required
+              aria-invalid={!nameValid}
             />
+            <div className="meter">
+              <span style={{ width: `${namePct}%` }} />
+            </div>
+            <div className="hint">
+              {nameLen}/{NAME_MAX} — mínimo 3 caracteres.
+            </div>
+          </div>
 
-            <label className="label">Description</label>
+          {/* Descripción */}
+          <div className={`field ${!descValid ? "invalid" : ""}`}>
+            <label className="label">Descripción</label>
             <textarea
               className="textarea"
-              placeholder="You can add a link to guide the clients"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Opcional (máx. 320)"
+              maxLength={DESC_MAX}
+              aria-invalid={!descValid}
             />
+            <div className="meter">
+              <span style={{ width: `${descPct}%` }} />
+            </div>
+            <div className="hint">
+              {descLen}/{DESC_MAX}
+            </div>
+          </div>
 
-            <button type="submit" className="save-button">
-              Save
+          {/* Preview mini */}
+          {nameLen > 0 && (
+            <div className="preview">
+              <div className="preview-title">Vista rápida</div>
+              <div className="preview-card">
+                <div className="preview-icon">💪</div>
+                <div>
+                  <div className="preview-name">{name.trim()}</div>
+                  <div className="preview-desc">
+                    {description.trim() || "Sin descripción"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && <div className="msg error">{error}</div>}
+
+          <div className="actions">
+          <button
+              type="button"
+              className="btn ghost"
+              onClick={() => navigate(-1)}   // ⬅️ antes: history.back()
+            >
+              Cancelar
             </button>
-          </form>
-        </main>
-
-        <div className="bottom-navigation">
-          <button className="nav-button"><i className="fas fa-home"></i></button>
-          <button className="nav-button"><i className="fas fa-user-plus"></i></button>
-          <button className="nav-button"><i className="fas fa-clipboard-list"></i></button>
-          <button className="nav-button"><i className="fas fa-user"></i></button>
-        </div>
+            <button
+              type="submit"
+              className="btn primary"
+              disabled={saving || !formValid}
+            >
+              {saving ? "Guardando…" : "Guardar"}
+            </button>
+          </div>
+        </form>
       </div>
+
+      {/* Toast de éxito */}
+      {ok && <div className="toast ok">{ok}</div>}
     </div>
   );
-};
-
-export default CreateExercise;
+}
