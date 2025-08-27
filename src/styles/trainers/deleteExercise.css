@@ -121,3 +121,25 @@ select:focus {
 .nav-button:hover {
   color: #007bff;
 }
+
+.modal{
+  position: fixed; inset:0; display:grid; place-items:center;
+  background: rgba(2,6,23,.55); backdrop-filter: blur(3px);
+  z-index: 50;
+}
+.modal-card{
+  width: min(520px, calc(100% - 32px));
+  background: rgba(17,24,39,.92);
+  color: #e5e7eb;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+.modal-actions{
+  display:flex; justify-content:flex-end; gap:8px; margin-top:14px;
+}
+.btn.danger{
+  background: #ef4444; color: #fff;
+  box-shadow: 0 10px 30px rgba(239,68,68,.35);
+}

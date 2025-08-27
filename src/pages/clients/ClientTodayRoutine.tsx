@@ -1,104 +1,109 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '../../styles/clients/todayRoutine.css';
+import {
+  getAssignedRoutines,
+  updateAssignedRoutine,
+  AssignedRoutine,
+} from '../../services/assignedRoutinesService';
+import { getDailyRoutines, Routine } from '../../services/dailyRoutinesService';
 
-interface AssignedRoutine {
-  _id: string;
-  id_dailyroutineexercise: string;
-  id_client: string;
-  id_coach: string;
-  notes: string;
-  done: boolean;
-  dayofweek: string;
-}
-
-interface Routine {
-  _id: string;
-  name: string;
-}
-
-const clientId = "687f715c6811be42dffd67b8"; // Esperando acomodarlo con el módulo de seguridad
+const clientId = '687f715c6811be42dffd67b8';
+const spanishDays = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
 export default function ClientTodayRoutine() {
-  const [day, setDay] = useState("lunes");
+  const [day, setDay] = useState<string>(() => spanishDays[new Date().getDay()] ?? 'lunes');
   const [assignedRoutines, setAssignedRoutines] = useState<AssignedRoutine[]>([]);
-  const [routinesMap, setRoutinesMap] = useState<{ [key: string]: string }>({});
-  const [noteInput, setNoteInput] = useState("");
+  const [routinesMap, setRoutinesMap] = useState<Record<string, string>>({});
+  const [noteInput, setNoteInput] = useState('');
   const [selectedRoutine, setSelectedRoutine] = useState<AssignedRoutine | null>(null);
 
-  // Días disponibles
-  const days = ["lunes", "martes", "miércoles", "jueves", "viernes"];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingDone, setUpdatingDone] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
+
+  const days = useMemo(() => ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'], []);
 
   useEffect(() => {
-    fetch("http://localhost:8000/assignedroutines")
-      .then(res => res.json())
-      .then(data => {
-        const clientRoutines = data.filter((r: AssignedRoutine) => r.id_client === clientId);
-        setAssignedRoutines(clientRoutines);
-      });
-    
-    fetch("http://localhost:8000/dailyroutines")
-      .then(res => res.json())
-      .then(data => {
-        const map: { [key: string]: string } = {};
-        data.forEach((r: Routine) => {
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [assigned, routines] = await Promise.all([
+          getAssignedRoutines(),
+          getDailyRoutines(),
+        ]);
+
+        const clientOnly = assigned.filter((r) => r.id_client === clientId);
+        setAssignedRoutines(clientOnly);
+
+        const map: Record<string, string> = {};
+        routines.forEach((r: Routine) => {
           map[r._id] = r.name;
         });
         setRoutinesMap(map);
-      });
+      } catch (e) {
+        console.error(e);
+        setError('No se pudo cargar las rutinas... o tal vez no tienes rutinas asignadas, por favor busca algún entrenador');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {
-    const match = assignedRoutines.find(r => r.dayofweek === day);
-    setSelectedRoutine(match || null);
-    setNoteInput(match?.notes || "");
+    const match = assignedRoutines.find((r) => r.dayofweek === day) || null;
+    setSelectedRoutine(match);
+    setNoteInput(match?.notes ?? '');
   }, [day, assignedRoutines]);
 
   const handleToggleDone = async () => {
-    if (!selectedRoutine) return;
-    const updated = { ...selectedRoutine, done: !selectedRoutine.done };
-
-    const res = await fetch(`http://localhost:8000/assignedroutines/${selectedRoutine._id}`, {
-      method: "PUT",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ done: updated.done })
-    });
-
-    if (res.ok) {
-      setAssignedRoutines(prev =>
-        prev.map(r => r._id === updated._id ? { ...r, done: updated.done } : r)
-      );
+    if (!selectedRoutine || updatingDone) return;
+    setUpdatingDone(true);
+    try {
+      const updated = await updateAssignedRoutine(selectedRoutine._id, {
+        done: !selectedRoutine.done,
+      });
+      setAssignedRoutines((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+    } catch (e) {
+      console.error(e);
+      alert('Error al actualizar el estado');
+    } finally {
+      setUpdatingDone(false);
     }
   };
 
   const handleSaveNote = async () => {
-    if (!selectedRoutine) return;
-
-    const res = await fetch(`http://localhost:8000/assignedroutines/${selectedRoutine._id}`, {
-      method: "PUT",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes: noteInput })
-    });
-
-    if (res.ok) {
-      alert("Nota guardada correctamente.");
-    } else {
-      alert("Error al guardar la nota.");
+    if (!selectedRoutine || savingNote) return;
+    setSavingNote(true);
+    try {
+      const updated = await updateAssignedRoutine(selectedRoutine._id, { notes: noteInput });
+      setAssignedRoutines((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+    } catch (e) {
+      console.error(e);
+      alert('Error al guardar la nota');
+    } finally {
+      setSavingNote(false);
     }
   };
 
-  const progress = Math.round(
-    (assignedRoutines.filter(r => r.done).length / Math.max(1, assignedRoutines.length)) * 100
-  );
+  const progress = useMemo(() => {
+    const total = assignedRoutines.length || 1;
+    const done = assignedRoutines.filter((r) => r.done).length;
+    return Math.round((done / total) * 100);
+  }, [assignedRoutines]);
 
   return (
     <div className="routine-container">
-      <h2>GYM KSG</h2>
+      <h2 className="routine-brand">GYM KSG</h2>
 
-      <div className="day-tabs">
-        {days.map(d => (
+      <div className="day-tabs" role="tablist" aria-label="Días de la semana">
+        {days.map((d) => (
           <button
             key={d}
-            className={d === day ? "active-day" : ""}
+            role="tab"
+            aria-selected={d === day}
+            className={`day-tab ${d === day ? 'active-day' : ''}`}
             onClick={() => setDay(d)}
           >
             {d.charAt(0).toUpperCase() + d.slice(1)}
@@ -106,39 +111,72 @@ export default function ClientTodayRoutine() {
         ))}
       </div>
 
-      <div className="routine-box">
-        <h3>My routine today</h3>
-        <p>{selectedRoutine ? routinesMap[selectedRoutine.id_dailyroutineexercise] : "No routine assigned"}</p>
-      </div>
-
-      <div className="progress-box">
-        <h3>My progress</h3>
-        <div className="progress-bar">
-          <div className="fill" style={{ width: `${progress}%` }}></div>
+      {loading ? (
+        <div className="skeleton-grid">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
         </div>
-        <p>{progress}%</p>
-      </div>
-
-      {selectedRoutine && (
+      ) : error ? (
+        <div className="error-box">{error}</div>
+      ) : (
         <>
-          <div className="toggle-box">
-            <label>Done!</label>
-            <input
-              type="checkbox"
-              checked={selectedRoutine.done}
-              onChange={handleToggleDone}
-            />
+          <div className="cards-grid">
+            <div className="routine-box glass">
+              <h3>My routine today</h3>
+              <p className="routine-name">
+                {selectedRoutine
+                  ? routinesMap[selectedRoutine.id_dailyroutineexercise] ?? 'Nombre no disponible'
+                  : 'No routine assigned'}
+              </p>
+
+              <div className="toggle-box">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={!!selectedRoutine?.done}
+                    onChange={handleToggleDone}
+                    disabled={!selectedRoutine || updatingDone}
+                    aria-label="Mark as done"
+                  />
+                  <span className="slider" />
+                </label>
+                <span className="toggle-label">{selectedRoutine?.done ? 'Done' : 'Pending'}</span>
+              </div>
+            </div>
+
+            <div className="progress-box glass">
+              <h3>My progress</h3>
+              <div className="progress-bar" aria-label="Progress bar">
+                <div className="fill" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="progress-text">{progress}%</p>
+            </div>
           </div>
 
-          <div className="notes-box">
-            <h4>Notes</h4>
-            <textarea
-              value={noteInput}
-              onChange={(e) => setNoteInput(e.target.value)}
-              rows={4}
-            />
-            <button onClick={handleSaveNote}>Save Note</button>
-          </div>
+          {selectedRoutine && (
+            <div className="notes-box glass">
+              <div className="notes-header">
+                <h4>Notes</h4>
+                <small className="muted">{noteInput.length}/500</small>
+              </div>
+
+              <textarea
+                value={noteInput}
+                onChange={(e) => setNoteInput(e.target.value.slice(0, 500))}
+                rows={5}
+                placeholder="Write something about today’s routine…"
+              />
+
+              <div className="notes-actions">
+                <button
+                  onClick={handleSaveNote}
+                  disabled={savingNote || noteInput === (selectedRoutine.notes ?? '')}
+                >
+                  {savingNote ? 'Saving…' : 'Save Note'}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

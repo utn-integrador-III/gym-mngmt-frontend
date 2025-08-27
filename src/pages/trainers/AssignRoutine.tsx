@@ -1,129 +1,243 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../styles/trainers/assignRoutine.css";
 
-interface Client {
-  _id: string;
-  username: string;
-}
+import { getDailyRoutines, Routine } from "../../services/dailyRoutinesService";
+import { createAssignedRoutine } from "../../services/assignedRoutinesService";
+import { getClients } from "../../services/clientsService";
 
-interface Routine {
+const coachId = "";
+
+type Client = {
   _id: string;
   name: string;
-}
+  username?: string;
+  email?: string;
+  photo_url?: string;
+  photo?: string;
+};
+
+type Row = { routineId: string; day: string };
 
 export default function AssignRoutine() {
+  const navigate = useNavigate();
+  const TRAINER_MENU_PATH = "../trainerMenu";
+
   const [clients, setClients] = useState<Client[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [rows, setRows] = useState<Row[]>([{ routineId: "", day: "" }]);
+  const [clientId, setClientId] = useState<string>("");
 
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [selectedRoutineId, setSelectedRoutineId] = useState("");
-  const [dayOfWeek, setDayOfWeek] = useState("lunes");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // get clients
+  const days = useMemo(
+    () => ["lunes", "martes", "miércoles", "jueves", "viernes"],
+    []
+  );
+
+  // Cargar clientes y rutinas existentes
   useEffect(() => {
-    fetch("http://localhost:8000/users")
-      .then((res) => res.json())
-      .then((data) => {
-        const filtered = data.filter((u: any) => u.role === "Client" || !u.role);
-        setClients(filtered);
-      })
-      .catch((err) => console.error("Error cargando clientes:", err));
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [clts, dailies] = await Promise.all([getClients(), getDailyRoutines()]);
+        setClients(clts || []);
+        setRoutines(dailies || []);
+      } catch (e) {
+        console.error(e);
+        setError("No se pudieron cargar los clientes o las rutinas.");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  // get routines 
-  useEffect(() => {
-    fetch("http://localhost:8000/dailyroutines")
-      .then((res) => res.json())
-      .then((data) => setRoutines(data))
-      .catch((err) => console.error("Error cargando rutinas:", err));
-  }, []);
+  const addRow = () => setRows((r) => [...r, { routineId: "", day: "" }]);
+  const removeRow = (idx: number) =>
+    setRows((r) => (r.length === 1 ? r : r.filter((_, i) => i !== idx)));
+  const changeRow = (idx: number, patch: Partial<Row>) =>
+    setRows((r) => {
+      const copy = [...r];
+      copy[idx] = { ...copy[idx], ...patch };
+      return copy;
+    });
+
+  // Validaciones
+  const allFilled =
+    clientId &&
+    rows.every((x) => x.routineId && x.day) &&
+    rows.length > 0;
+
+  const hasRowDuplicates = useMemo(() => {
+    const keys = rows
+      .filter((x) => x.day && x.routineId)
+      .map((x) => `${x.day}::${x.routineId}`);
+    return new Set(keys).size !== keys.length;
+  }, [rows]);
+
+  const canSubmit = allFilled && !hasRowDuplicates && !saving && !loading;
+
+  const routineName = (id: string) =>
+    routines.find((r) => r._id === id)?.name || "Rutina";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
 
-    if (!selectedClientId || !selectedRoutineId || !dayOfWeek) {
-      alert("Por favor, completa todos los campos.");
-      return;
-    }
-
-    const routineData = {
-      id_coach: "687e06685d26f6a1fe30c0a5", // EN LO QUE ACOMODAMOS CON EL MÓDULO DE SEGURIDAD
-      id_client: selectedClientId,
-      id_dailyroutineexercise: selectedRoutineId,
-      notes: "",
-      done: false,
-      dayofweek: dayOfWeek
-    };
-
+    setSaving(true);
+    setError(null);
+    setSuccessMsg(null);
     try {
-      const res = await fetch("http://localhost:8000/assignedroutines/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(routineData)
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert("✅ Rutina asignada correctamente.");
-        // Reset form fields
-        setSelectedClientId("");
-        setSelectedRoutineId("");
-        setDayOfWeek("lunes");
-      } else {
-        alert(result.detail || "Error al asignar rutina.");
-      }
-    } catch (err) {
-      console.error("[ERROR]", err);
-      alert("Error en la asignación de rutina.");
+      await Promise.all(
+        rows.map((r) =>
+          createAssignedRoutine({
+            id_client: clientId,
+            id_coach: coachId,
+            id_dailyroutineexercise: r.routineId,
+            dayofweek: r.day,
+            notes: "",
+            done: false,
+          })));
+      setSuccessMsg("¡Rutina(s) asignada(s) con éxito!");
+      setRows([{ routineId: "", day: "" }]);
+      // no limpio cliente para que asignes varias tandas al mismo
+    } catch (e) {
+      console.error(e);
+      setError("Error al asignar rutina(s).");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <div className="assign-container">
-      <h2>Asignar rutina a cliente</h2>
-      <form className="assign-form" onSubmit={handleSubmit}>
-        <label>Cliente:</label>
-        <select
-          value={selectedClientId}
-          onChange={(e) => setSelectedClientId(e.target.value)}
-          required
-        >
-          <option value="">Seleccione un cliente</option>
-          {clients.map((client) => (
-            <option key={client._id} value={client._id}>
-              {client.username}
+      <button
+        type="button"
+        className="btn back"
+        onClick={() => navigate(TRAINER_MENU_PATH)}
+      >
+        ← Volver al menú
+      </button>
+
+      <h2 className="assign-title">Asignar Rutina(s)</h2>
+
+      <form className="assign-card" onSubmit={handleSubmit}>
+        {/* Cliente */}
+        <div className="form-row">
+          <label className="lbl">Cliente</label>
+          <select
+            className={`in sel ${!clientId ? "is-placeholder" : ""}`}
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            required
+          >
+            <option value="" disabled hidden>
+              Seleccionar cliente…
             </option>
-          ))}
-        </select>
+            {clients.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name} {c.username ? `(@${c.username})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <label>Rutina:</label>
-        <select
-          value={selectedRoutineId}
-          onChange={(e) => setSelectedRoutineId(e.target.value)}
-          required
-        >
-          <option value="">Seleccione una rutina</option>
-          {routines.map((routine) => (
-            <option key={routine._id} value={routine._id}>
-              {routine.name}
-            </option>
-          ))}
-        </select>
+        {/* Encabezado filas */}
+        <div className="rows-head">
+          <span>Asignaciones</span>
+          <div className="rows-actions">
+            <button type="button" className="btn ghost" onClick={addRow}>
+              + Agregar fila
+            </button>
+          </div>
+        </div>
 
-        <label>Día de la semana:</label>
-        <select
-          value={dayOfWeek}
-          onChange={(e) => setDayOfWeek(e.target.value)}
-          required
-        >
-          <option value="lunes">Lunes</option>
-          <option value="martes">Martes</option>
-          <option value="miércoles">Miércoles</option>
-          <option value="jueves">Jueves</option>
-          <option value="viernes">Viernes</option>
-        </select>
+        {/* Filas */}
+        {loading ? (
+          <div className="skeleton" />
+        ) : (
+          rows.map((row, idx) => (
+            <div className="row" key={idx}>
+              <div className="row-num">#{idx + 1}</div>
 
-        <button type="submit">Asignar rutina</button>
+              <select
+                className={`in sel ${!row.routineId ? "is-placeholder" : ""}`}
+                value={row.routineId}
+                onChange={(e) => changeRow(idx, { routineId: e.target.value })}
+                required
+              >
+                <option value="" disabled hidden>
+                  Seleccionar rutina…
+                </option>
+                {routines.map((r) => (
+                  <option key={r._id} value={r._id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className={`in sel ${!row.day ? "is-placeholder" : ""}`}
+                value={row.day}
+                onChange={(e) => changeRow(idx, { day: e.target.value })}
+                required
+              >
+                <option value="" disabled hidden>
+                  Día…
+                </option>
+                {days.map((d) => (
+                  <option value={d} key={d}>
+                    {d.charAt(0).toUpperCase() + d.slice(1)}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                className="btn danger"
+                onClick={() => removeRow(idx)}
+                disabled={rows.length === 1}
+                title={rows.length === 1 ? "Debe existir al menos una fila" : "Eliminar fila"}
+              >
+                Eliminar
+              </button>
+            </div>
+          ))
+        )}
+
+        {/* Mensajes */}
+        {hasRowDuplicates && (
+          <div className="msg warn">
+            Tienes filas duplicadas (misma rutina y día). Ajusta antes de guardar.
+          </div>
+        )}
+        {error && <div className="msg error">{error}</div>}
+        {successMsg && <div className="msg ok">{successMsg}</div>}
+
+        {/* Preview */}
+        {allFilled && (
+          <div className="preview">
+            <h4>Se asignará a {clients.find((c) => c._id === clientId)?.name}:</h4>
+            <ul>
+              {rows.map((r, i) => (
+                <li key={i}>
+                  {routineName(r.routineId)} — {r.day}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="footer">
+          <button type="submit" className="btn primary" disabled={!canSubmit}>
+            {saving ? "Guardando…" : "Guardar Asignaciones"}
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -1,72 +1,68 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth/register.css';
+import { usersApi } from '../../services/usersService';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
-  const [photo, setPhoto] = useState('');
-  const [role, setRole] = useState('Client');
+  const [role, setRole] = useState<'Client' | 'Trainer'>('Client');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!photoFile) {
+      alert('Selecciona una foto de perfil');
+      return;
+    }
 
-    const securityData = {
-      name: name,
-      phone: phone,
-      role: role,
-      email: email,
-      password: password
-    };
-
-
-    const profileData = {
-      gender: gender,
-      phone: phone,
-      photo: photo,
-      username: username
-    };
-
+    /* Construye el FormData con las claves que espera el backend y el modulo de seguridad 
+    const form = new FormData();
+    form.append('name', name);
+    form.append('username', username);
+    form.append('gender', gender.toLowerCase());
+    form.append('phone', phone);
+    form.append('role', role);
+    form.append('email', email);
+    form.append('password', password);
+    form.append('photo', photoFile); // <- clave del archivo (ajústala si tu backend usa 'file'/'avatar')
 
     try {
-      // 🚧 Registro en el módulo de seguridad (espacio reservado)
-      console.log('[DEBUG] Seguridad > Datos prueba:', securityData);
-      // await fetch('http://MODULO_SEGURIDAD/api/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(securityData)
-      // });
-
-      // ✅ Registro local en FastAPI
-      alert(JSON.stringify(profileData));
-
-      const localResponse = await fetch('http://localhost:8000/users/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileData)
-      });
-
-     if (localResponse.ok) {
-      const result = await localResponse.json();
-      console.log('[DEBUG] Respuesta de FastAPI:', result);
+      const result = await createUser(form);
+      console.log('[DEBUG] FastAPI:', result);
       alert('¡Usuario registrado correctamente!');
-      navigate('/');
-    } else {
-      const errorText = await localResponse.text();
-      console.error('[ERROR] Respuesta de FastAPI:', errorText);
-      alert('Error al registrar usuario en FastAPI.');
-    }
-
+      navigate('/login');
     } catch (err) {
       console.error('[ERROR]', err);
-      alert('Error en el proceso de registro.');
+      alert('Error al registrar usuario.');
     }
   };
+
+  */
+
+  const fd = new FormData();
+    fd.append('username', username);
+    fd.append('gender', gender.toLowerCase() as 'male' | 'female');
+    if (phone) fd.append('phone', phone);
+    if (photoFile) fd.append('photo', photoFile);
+
+    try {
+      const user = await usersApi.create(fd);
+      console.log('Creado:', user);
+      alert('¡Usuario creado!');
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      alert('Error creando usuario');
+    }
+  };  
+
 
   return (
     <div className="register-container">
@@ -84,7 +80,7 @@ export default function Register() {
 
         <input
           type="text"
-          placeholder="Username"
+          placeholder="Username (this must be unique)"
           className="register-input"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -94,7 +90,7 @@ export default function Register() {
         <select
           className="register-input"
           value={gender}
-          onChange={(e) => setGender(e.target.value.toLowerCase())}
+          onChange={(e) => setGender(e.target.value)}
           required
         >
           <option value="">Select Gender</option>
@@ -111,19 +107,22 @@ export default function Register() {
           required
         />
 
+        
         <input
-          type="url"
-          placeholder="Photo URL"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
           className="register-input"
-          value={photo}
-          onChange={(e) => setPhoto(e.target.value)}
+          onChange={(e) => {
+            const f = e.target.files?.[0] || null;
+            setPhotoFile(f);
+          }}
           required
         />
 
         <select
           className="register-input"
           value={role}
-          onChange={(e) => setRole(e.target.value)}
+          onChange={(e) => setRole(e.target.value as 'Client' | 'Trainer')}
         >
           <option value="Client">Client</option>
           <option value="Trainer">Trainer</option>
@@ -147,16 +146,16 @@ export default function Register() {
           required
         />
 
-        <button type="submit" className="register-button">
-          Register
+        <button type="submit" className="register-button">Register</button>
+
+        <button
+          className="back-button"
+          type="button"
+          onClick={() => navigate('/')}
+        >
+          Go back to Login
         </button>
       </form>
-
-      <button
-        className="back-button"
-        type="button">
-        Go back to Login
-      </button>
     </div>
   );
 }
