@@ -1,0 +1,251 @@
+/* Fuente sugerida (puedes moverla a tu CSS global si prefieres) */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+/* ===== Tokens ===== */
+:root {
+  --bg-start: #0f172a;    /* slate-900 */
+  --bg-end:   #1e293b;    /* slate-800 */
+  --text:     #f8fafc;    /* slate-50 */
+  --muted:    #cbd5e1;    /* slate-300 */
+  --accent:   #7dd3fc;    /* sky-300 */
+  --accent-2: #a78bfa;    /* violet-400 */
+  --glass:    rgba(255,255,255,0.12);
+  --glass-strong: rgba(255,255,255,0.18);
+  --border:   rgba(255,255,255,0.25);
+  --shadow:   rgba(2, 6, 23, 0.45);   /* deep bluish shadow */
+  --error:    #ef4444;
+  --radius:   18px;
+  --spacing:  20px;
+}
+
+/* ===== Layout de página ===== */
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* Fondo degradado + decoración */
+.auth-page::before,
+.auth-page::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: -2;
+  background: radial-gradient(60% 50% at 80% 10%, rgba(124, 58, 237, 0.25) 0%, transparent 60%),
+              radial-gradient(50% 40% at 20% 90%, rgba(14, 165, 233, 0.22) 0%, transparent 55%),
+              linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  filter: saturate(1.1);
+}
+
+.auth-page::after {
+  background: radial-gradient(40% 35% at 85% 20%, rgba(167, 139, 250, 0.12) 0%, transparent 60%),
+              radial-gradient(40% 35% at 15% 80%, rgba(125, 211, 252, 0.10) 0%, transparent 60%);
+  z-index: -1;
+}
+
+/* ===== Tarjeta de vidrio ===== */
+.glass-card {
+  width: min(440px, 92vw);
+  padding: calc(var(--spacing) * 1.35);
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 60px var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* Opcional: cabecera/logo/título */
+.logo {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  margin: 0 auto var(--spacing);
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b1220;
+  font-weight: 700;
+}
+
+.title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.95rem;
+  margin-bottom: calc(var(--spacing) * 1.2);
+}
+
+/* ===== Form ===== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+
+.label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 14px;
+  margin: 0;
+  border-radius: 12px;
+  color: #0f172a;
+  background: var(--glass-strong);
+  border: 1px solid rgba(255,255,255,0.18);
+  
+  
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  box-sizing: border-box;
+}
+
+
+
+.input::placeholder {
+  color: rgba(248, 250, 252, 0.55);
+}
+
+.input:focus {
+  border-color: rgba(125, 211, 252, 0.8);
+  box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.18);
+  background: rgba(255,255,255,0.16);
+}
+
+/* Fila meta (remember/forgot) */
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -6px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.link:hover { text-decoration: underline; }
+
+/* Botón primario con glow */
+.btn-primary {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.20);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b1220;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease;
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.28), 0 6px 14px rgba(125, 211, 252, 0.20);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.08);
+  box-shadow: 0 16px 40px rgba(124, 58, 237, 0.35), 0 10px 24px rgba(125, 211, 252, 0.25);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 10px 26px rgba(124, 58, 237, 0.28);
+}
+
+/* Divider */
+.divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: calc(var(--spacing) * 1.1) 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.35));
+}
+.divider::after {
+  background: linear-gradient(to left, transparent, rgba(255,255,255,0.35));
+}
+
+/* Redes / proveedores */
+.social-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.social-btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.10);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 120ms ease, background 160ms ease, border-color 160ms ease;
+  backdrop-filter: blur(6px);
+}
+.social-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.28);
+}
+
+/* Footer */
+.footer {
+  margin-top: calc(var(--spacing) * 0.8);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.footer a:hover { text-decoration: underline; }
+
+/* ===== Responsive ===== */
+@media (max-width: 420px) {
+  .glass-card { padding: 22px; }
+  .title { font-size: 1.35rem; }
+  .social-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
