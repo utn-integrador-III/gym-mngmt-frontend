@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
+    container_name: gym-mngmt-frontend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../src:/app/src
+      - ../public:/app/public
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - WDS_SOCKET_PORT=0
+    stdin_open: true
+    tty: true
