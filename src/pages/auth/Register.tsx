@@ -8,149 +8,151 @@ export default function Register() {
   const [username, setUsername] = useState('');
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'Client' | 'Trainer'>('Client');
+  const [role, setRole] = useState('Client');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) newErrors.name = 'El nombre es obligatorio.';
+    else if (name.length < 3) newErrors.name = 'El nombre debe tener al menos 3 caracteres.';
+
+    if (!username.trim()) newErrors.username = 'El nombre de usuario es obligatorio.';
+    else if (username.includes(' ')) newErrors.username = 'El nombre de usuario no puede tener espacios.';
+    else if (username.length < 3) newErrors.username = 'El nombre de usuario debe tener al menos 3 caracteres.';
+
+    if (!gender) newErrors.gender = 'Selecciona un género.';
+
+    if (!phone.trim()) newErrors.phone = 'El número de teléfono es obligatorio.';
+    else if (!/^\d{8,}$/.test(phone)) newErrors.phone = 'El teléfono debe contener al menos 8 dígitos.';
+
+    if (!email.trim()) newErrors.email = 'El correo electrónico es obligatorio.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'El correo electrónico no es válido.';
+
+    if (!password.trim()) newErrors.password = 'La contraseña es obligatoria.';
+    else if (password.length < 6) newErrors.password = 'La contraseña debe tener al menos 6 caracteres.';
+
+    if (!photoFile) newErrors.photo = 'La foto de perfil es obligatoria.';
+    else if (!['image/png', 'image/jpeg', 'image/webp'].includes(photoFile.type))
+      newErrors.photo = 'Formato de imagen no válido. Usa PNG, JPEG o WEBP.';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!photoFile) {
-      alert('Selecciona una foto de perfil');
-      return;
-    }
+    if (!validateForm()) return;
 
-    /* Construye el FormData con las claves que espera el backend y el modulo de seguridad 
-    const form = new FormData();
-    form.append('name', name);
-    form.append('username', username);
-    form.append('gender', gender.toLowerCase());
-    form.append('phone', phone);
-    form.append('role', role);
-    form.append('email', email);
-    form.append('password', password);
-    form.append('photo', photoFile); // <- clave del archivo (ajústala si tu backend usa 'file'/'avatar')
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('username', username);
+    formData.append('gender', gender.toLowerCase());
+    formData.append('phone', phone);
+    formData.append('role', role);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('photo', photoFile!);
 
     try {
-      const result = await createUser(form);
-      console.log('[DEBUG] FastAPI:', result);
-      alert('¡Usuario registrado correctamente!');
-      navigate('/login');
-    } catch (err) {
-      console.error('[ERROR]', err);
-      alert('Error al registrar usuario.');
+      const createdUser = await usersApi.create(formData);
+      console.log('Usuario creado:', createdUser);
+      alert('¡Usuario creado con éxito!');
+      navigate('/');
+    } catch (error) {
+      console.error('Error creando usuario:', error);
+      alert('Ocurrió un error al crear el usuario. Ver consola para más detalles.');
     }
   };
 
-  */
-
-  const fd = new FormData();
-    fd.append('username', username);
-    fd.append('gender', gender.toLowerCase() as 'male' | 'female');
-    if (phone) fd.append('phone', phone);
-    if (photoFile) fd.append('photo', photoFile);
-
-    try {
-      const user = await usersApi.create(fd);
-      console.log('Creado:', user);
-      alert('¡Usuario creado!');
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-      alert('Error creando usuario');
-    }
-  };  
-
-
   return (
     <div className="register-container">
-      <h2 className="register-title">New User</h2>
+      <h2 className="register-title">Welcome to the gym!</h2>
 
       <form className="register-form" onSubmit={handleSubmit}>
+        {/* Name */}
         <input
           type="text"
           placeholder="Name"
-          className="register-input"
+          className={`register-input ${errors.name ? 'input-error' : ''}`}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          required
         />
+        {errors.name && <p className="error-text">{errors.name}</p>}
 
+        {/* Username */}
         <input
           type="text"
-          placeholder="Username (this must be unique)"
-          className="register-input"
+          placeholder="Username (unique)"
+          className={`register-input ${errors.username ? 'input-error' : ''}`}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          required
         />
+        {errors.username && <p className="error-text">{errors.username}</p>}
 
+        {/* Gender */}
         <select
-          className="register-input"
+          className={`register-input ${errors.gender ? 'input-error' : ''}`}
           value={gender}
           onChange={(e) => setGender(e.target.value)}
-          required
         >
           <option value="">Select Gender</option>
           <option value="female">Female</option>
           <option value="male">Male</option>
         </select>
+        {errors.gender && <p className="error-text">{errors.gender}</p>}
 
+        {/* Phone */}
         <input
           type="tel"
           placeholder="Phone"
-          className="register-input"
+          className={`register-input ${errors.phone ? 'input-error' : ''}`}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          required
         />
+        {errors.phone && <p className="error-text">{errors.phone}</p>}
 
-        
+        {/* Photo */}
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp"
-          className="register-input"
-          onChange={(e) => {
-            const f = e.target.files?.[0] || null;
-            setPhotoFile(f);
-          }}
-          required
+          className={`register-input ${errors.photo ? 'input-error' : ''}`}
+          onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
         />
+        {errors.photo && <p className="error-text">{errors.photo}</p>}
 
-        <select
-          className="register-input"
-          value={role}
-          onChange={(e) => setRole(e.target.value as 'Client' | 'Trainer')}
-        >
-          <option value="Client">Client</option>
-          <option value="Trainer">Trainer</option>
-        </select>
 
+        {/* Email */}
         <input
           type="email"
           placeholder="Email"
-          className="register-input"
+          className={`register-input ${errors.email ? 'input-error' : ''}`}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
+        {errors.email && <p className="error-text">{errors.email}</p>}
 
+        {/* Password */}
         <input
           type="password"
           placeholder="Password"
-          className="register-input"
+          className={`register-input ${errors.password ? 'input-error' : ''}`}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
         />
+        {errors.password && <p className="error-text">{errors.password}</p>}
 
-        <button type="submit" className="register-button">Register</button>
-
+        {/* Submit */}
+        <button type="submit" className="register-button">
+          Register
+        </button>
         <button
-          className="back-button"
           type="button"
+          className="back-button"
           onClick={() => navigate('/')}
         >
           Go back to Login

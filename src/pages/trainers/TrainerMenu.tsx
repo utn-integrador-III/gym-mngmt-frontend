@@ -98,10 +98,9 @@ export default function TrainerMenu() {
 
       <nav className="bottom-navigation" aria-label="Quick actions">
         <button className="nav-button" title="Home" onClick={() => navigate(ROUTES.home)}><i className="fas fa-home" /></button>
-        <button className="nav-button" title="Create exercise" onClick={() => navigate(ROUTES.createExercise)}><i className="fas fa-user-plus" /></button>
-        <button className="nav-button" title="Assign routine" onClick={() => navigate(ROUTES.assignRoutine)}><i className="fas fa-clipboard-list" /></button>
-        <button className="nav-button" title="Client list" onClick={() => navigate(ROUTES.clientList)}><i className="fas fa-user" /></button>
-      </nav>
+        <button className="nav-button" title="Create exercise" onClick={() => navigate(ROUTES.assignRoutine)}><i className="fas fa-user-plus" /></button>
+        <button className="nav-button" title="Assign routine" onClick={() => navigate(ROUTES.clientList)}><i className="fas fa-clipboard-list" /></button>
+        </nav>
     </div>
   );
 }
