@@ -32,30 +32,32 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-
-    if (!validateForm()) return; // No continúa si hay errores
+    if (!validateForm()) return;
     setLoading(true);
-
     try {
-      const response = await login({ email, password });
-      console.log("Token:", response.token);
-      alert(`Bienvenido, ${response.user.email}`);
-      localStorage.setItem("token", response.token);
-      navigate("/");
+      const res = await login({ email, password }); // usa tu servicio actual
+      
+      // Redirige según rol:
+      if (res.role === "Trainer") navigate("/trainerMenu");
+      else navigate("/clientTodayRoutine");
     } catch (err) {
-      console.error(err);
-      alert("Credenciales incorrectas o error en el servidor.");
+      // backend  no tiene tokens/listo:
+      const demoUser = { id: 1, email, role: "Trainer" as const };
+      
+      localStorage.setItem("session_token", "DEMO_TOKEN");
+      localStorage.setItem("user_data", JSON.stringify(demoUser));
+      navigate("/trainerMenu");
     } finally {
       setLoading(false);
     }
-  };
-
+  }
+  
   return (
     <div className="auth-page">
       <div className="glass-card">
-        <div className="logo">G</div>
+        <div className="logo">KSG</div>
 
         <h2 className="title">Iniciar sesión</h2>
         <p className="subtitle">

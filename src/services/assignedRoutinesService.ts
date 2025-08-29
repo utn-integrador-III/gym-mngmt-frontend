@@ -23,7 +23,7 @@ export async function getAssignedRoutines(): Promise<AssignedRoutine[]> {
 
 export async function updateAssignedRoutine(id: string, patch: AssignedRoutinePatch) {
   const res = await fetch(`${BASE}/${id}`, {
-    method: "PUT", // <-- tu backend define PUT
+    method: "PUT", 
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(patch),

@@ -6,12 +6,9 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
-  user: {
-    id: number;
-    email: string;
-    role: string;
-  };
+  id: string;          
+  role: string;        // "admin" | "entrenador" | "cliente"
+  message: "ok";
 }
 
 export function login(data: LoginRequest) {

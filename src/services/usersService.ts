@@ -15,12 +15,14 @@ export const usersApi = {
     return `${BACKEND_BASE_URL}/users/${userId}/photo`;
   },
 
+  // Listar usuarios
   async list(): Promise<User[]> {
     const res = await fetch(`${BACKEND_BASE_URL}/users/`, { credentials: "include" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
 
+  // Obtener usuario por ID
   async get(userId: string): Promise<User> {
     const res = await fetch(`${BACKEND_BASE_URL}/users/${userId}`, { credentials: "include" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -49,6 +51,7 @@ export const usersApi = {
     return res.json();
   },
 
+  //eliminar usuario
   async remove(userId: string): Promise<{ ok: boolean }> {
     const res = await fetch(`${BACKEND_BASE_URL}/users/${userId}`, {
       method: "DELETE",

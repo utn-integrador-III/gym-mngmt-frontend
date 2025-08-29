@@ -12,6 +12,7 @@ import AssignRoutine from './pages/trainers/AssignRoutine';
 import ClientTodayRoutine from './pages/clients/ClientTodayRoutine'; 
 import UserProfile from './pages/profile/UserProfile';
 import EditRoutine from './pages/trainers/EditRoutine';
+import AdminAddCoach from './pages/Admin/AdminAddCoach';
 
 
 import './styles/auth/login.css';
@@ -42,7 +43,7 @@ function App() {
         <Route path="/clientTodayRoutine" element={<ClientTodayRoutine />} />
         <Route path="/userProfile" element={<UserProfile />} />
         <Route path="/editRoutine" element={<EditRoutine />} />
-
+        <Route path="/admin" element={<AdminAddCoach />} />      
       </Routes>
 
     </BrowserRouter>
