@@ -8,10 +8,8 @@ import { getAssignedRoutines, AssignedRoutine } from "../../services/assignedRou
 export default function ClientList() {
   const navigate = useNavigate();
 
-  // 🔁 Ajusta estas rutas si tu router usa otras
   const TRAINER_MENU_PATH = "/TrainerMenu";
   const PROGRESS_PATH = (id: string) => `/trainer/clients/${id}/progress`;
-  // Si tu AssignRoutine acepta ?client=ID para preseleccionar:
   const ASSIGN_PATH = (id: string) => `/AssignRoutine?client=${id}`;
 
   const [clients, setClients] = useState<User[]>([]);
@@ -20,16 +18,32 @@ export default function ClientList() {
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
 
+  // 🔹 Validar entrada del buscador
+  const handleSearch = (value: string) => {
+    if (value.length > 50) return; // prevenir cadenas extremadamente largas
+    setQ(value);
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
       setError(null);
       try {
         const [clts, asg] = await Promise.all([usersApi.list(), getAssignedRoutines()]);
-        setClients(clts || []);
-        setAssigned(asg || []);
+
+        // Validar que los datos sean arrays
+        if (!Array.isArray(clts) || !Array.isArray(asg)) {
+          throw new Error("Datos inválidos recibidos desde el servidor.");
+        }
+
+        // Filtrar clientes con ID válido
+        const validClients = clts.filter((c) => typeof c._id === "string" && c._id.trim() !== "");
+        const validAssigned = asg.filter((a) => typeof a.id_client === "string" && a.id_client.trim() !== "");
+
+        setClients(validClients);
+        setAssigned(validAssigned);
       } catch (e) {
-        console.error(e);
+        console.error("Error cargando datos:", e);
         setError("No se pudieron cargar los clientes. Verifique su conexión.");
       } finally {
         setLoading(false);
@@ -37,35 +51,36 @@ export default function ClientList() {
     })();
   }, []);
 
-  // Progreso por cliente
+  // 🔹 Calcular progreso por cliente
   const progressByClient = useMemo(() => {
     const map: Record<string, { total: number; done: number; percent: number }> = {};
     for (const r of assigned) {
+      if (!r?.id_client) continue;
       const id = r.id_client;
-      if (!id) continue;
       if (!map[id]) map[id] = { total: 0, done: 0, percent: 0 };
       map[id].total += 1;
       if (r.done) map[id].done += 1;
     }
-    for (const id of Object.keys(map)) {
+    Object.keys(map).forEach((id) => {
       const { total, done } = map[id];
-      map[id].percent = total ? Math.round((done / total) * 100) : 0;
-    }
+      map[id].percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    });
     return map;
   }, [assigned]);
 
-  // Búsqueda por username o teléfono/email si existen
+  // 🔹 Filtrar clientes según búsqueda
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return clients;
-    return clients.filter((c) =>
-      (c.username?.toLowerCase().includes(s)) ||
-      (c.phone?.toLowerCase?.().includes(s)) ||
-      (c as any).email?.toLowerCase?.().includes(s)
-    );
+    return clients.filter((c) => {
+      const username = c.username?.toLowerCase() || "";
+      const phone = c.phone?.toLowerCase?.() || "";
+      const email = (c as any).email?.toLowerCase?.() || "";
+      return username.includes(s) || phone.includes(s) || email.includes(s);
+    });
   }, [q, clients]);
 
-  // Orden por progreso desc
+  // 🔹 Ordenar clientes según porcentaje de progreso
   const ordered = useMemo(() => {
     return [...filtered].sort((a, b) => {
       const pa = progressByClient[a._id]?.percent ?? 0;
@@ -74,15 +89,30 @@ export default function ClientList() {
     });
   }, [filtered, progressByClient]);
 
+  // 🔹 Función para iniciales del avatar
   const initials = (username?: string) =>
     (username ?? "??")
       .split(/\s+/)
       .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? "")
+      .map((p) => (p[0]?.toUpperCase() ?? ""))
       .join("") || "??";
 
-  const handleProgress = (id: string) => navigate(PROGRESS_PATH(id));
-  const handleAssign = (id: string) => navigate(ASSIGN_PATH(id));
+  // 🔹 Navegación segura
+  const handleProgress = (id: string) => {
+    if (!id) {
+      alert("ID inválido para ver el progreso.");
+      return;
+    }
+    navigate(PROGRESS_PATH(id));
+  };
+
+  const handleAssign = (id: string) => {
+    if (!id) {
+      alert("ID inválido para asignar rutina.");
+      return;
+    }
+    navigate(ASSIGN_PATH(id));
+  };
 
   return (
     <div className="clist-container">
@@ -98,7 +128,7 @@ export default function ClientList() {
             className="in search"
             placeholder="Buscar por usuario, teléfono o email…"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
       </div>
@@ -120,8 +150,8 @@ export default function ClientList() {
             const total = progressByClient[c._id]?.total ?? 0;
             const done = progressByClient[c._id]?.done ?? 0;
 
-            const hasPhoto = Boolean(c.photo); // el backend guarda el id de GridFS en `photo`
-            const photoSrc = usersApi.photoUrl(c._id); // GET /users/{id}/photo
+            const hasPhoto = Boolean(c.photo);
+            const photoSrc = usersApi.photoUrl(c._id);
 
             return (
               <div className="card glass" key={c._id}>
@@ -129,9 +159,11 @@ export default function ClientList() {
                   {hasPhoto ? (
                     <img
                       src={photoSrc}
-                      alt={c.username}
+                      alt={c.username || "Cliente"}
                       className="avatar"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
                     />
                   ) : (
                     <div className="avatar fallback" aria-label="avatar">
@@ -140,7 +172,7 @@ export default function ClientList() {
                   )}
 
                   <div className="info">
-                    <div className="name">{c.username}</div>
+                    <div className="name">{c.username || "Sin nombre"}</div>
                     {("email" in c && (c as any).email) && (
                       <div className="sub em">{(c as any).email}</div>
                     )}

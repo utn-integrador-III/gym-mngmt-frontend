@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getExercises, Exercise } from "../../services/exercisesService";
 import { createDailyRoutine } from "../../services/dailyRoutinesService";
 
@@ -6,7 +6,12 @@ export default function CreateRoutine() {
   const [exerciseList, setExerciseList] = useState<Exercise[]>([]);
   const [numExercises, setNumExercises] = useState(1);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const MAX_EXERCISES = 20;
+
+  // Cargar ejercicios
   useEffect(() => {
     (async () => {
       try {
@@ -18,9 +23,9 @@ export default function CreateRoutine() {
         alert("Error cargando ejercicios");
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Ajustar array de seleccionados si cambia numExercises
   useEffect(() => {
     setSelectedExercises((prev) => {
       const next = Array(numExercises).fill("");
@@ -37,21 +42,39 @@ export default function CreateRoutine() {
     });
   };
 
+  // Validaciones
+  const allSelected = selectedExercises.every((ex) => ex);
+  const hasDuplicates = new Set(selectedExercises.filter(Boolean)).size !== selectedExercises.filter(Boolean).length;
+  const numValid = numExercises >= 1 && numExercises <= MAX_EXERCISES;
+
+  const canSubmit = allSelected && !hasDuplicates && numValid && !saving;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!canSubmit) {
+      if (!numValid) setError(`La cantidad de ejercicios debe ser entre 1 y ${MAX_EXERCISES}.`);
+      else if (!allSelected) setError("Debes seleccionar todos los ejercicios.");
+      else if (hasDuplicates) setError("No se permiten ejercicios duplicados.");
+      return;
+    }
+
     try {
-      // Ejemplo: crea una "rutina" por cada ejercicio seleccionado (ajusta a tu API real)
+      setSaving(true);
       await Promise.all(
-        selectedExercises
-          .filter(Boolean)
-          .map((exerciseId) => createDailyRoutine({ name: "Nueva rutina", id_exercise: exerciseId }))
+        selectedExercises.map((exerciseId) =>
+          createDailyRoutine({ name: "Nueva rutina", id_exercise: exerciseId })
+        )
       );
-      alert("Rutina(s) creada(s)");
+      alert("Rutina(s) creada(s) con éxito");
       setNumExercises(1);
       setSelectedExercises([""]);
     } catch (e) {
       console.error(e);
-      alert("Error creando rutina");
+      setError("Error creando rutina(s).");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -63,9 +86,11 @@ export default function CreateRoutine() {
       <input
         type="number"
         min={1}
+        max={MAX_EXERCISES}
         value={numExercises}
         onChange={(e) => setNumExercises(Number(e.target.value))}
       />
+      {!numValid && <div className="error-text">Debe ser entre 1 y {MAX_EXERCISES}.</div>}
 
       {Array.from({ length: numExercises }).map((_, idx) => (
         <div key={idx}>
@@ -73,6 +98,7 @@ export default function CreateRoutine() {
           <select
             value={selectedExercises[idx] || ""}
             onChange={(e) => handleChangeExercise(idx, e.target.value)}
+            required
           >
             <option value="">-- Seleccionar --</option>
             {exerciseList.map((ex) => (
@@ -84,7 +110,12 @@ export default function CreateRoutine() {
         </div>
       ))}
 
-      <button type="submit">Guardar</button>
+      {hasDuplicates && <div className="error-text">No se permiten ejercicios duplicados.</div>}
+      {error && <div className="error-text">{error}</div>}
+
+      <button type="submit" disabled={!canSubmit}>
+        {saving ? "Guardando…" : "Guardar"}
+      </button>
     </form>
   );
 }

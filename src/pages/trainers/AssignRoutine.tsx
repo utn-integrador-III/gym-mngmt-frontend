@@ -6,7 +6,7 @@ import { getDailyRoutines, Routine } from "../../services/dailyRoutinesService";
 import { createAssignedRoutine } from "../../services/assignedRoutinesService";
 import { getClients } from "../../services/clientsService";
 
-const coachId = "";
+const coachId = localStorage.getItem("coach_id") || ""; // ⚠️ Coach debe estar en sesión
 
 type Client = {
   _id: string;
@@ -38,7 +38,15 @@ export default function AssignRoutine() {
     []
   );
 
-  // Cargar clientes y rutinas existentes
+  // Verificar sesión
+  useEffect(() => {
+    if (!coachId) {
+      alert("Sesión inválida. Vuelve a iniciar sesión.");
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  // Cargar clientes y rutinas
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -66,7 +74,7 @@ export default function AssignRoutine() {
       return copy;
     });
 
-  // Validaciones
+  // Validaciones dinámicas
   const allFilled =
     clientId &&
     rows.every((x) => x.routineId && x.day) &&
@@ -86,11 +94,28 @@ export default function AssignRoutine() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
-
-    setSaving(true);
     setError(null);
     setSuccessMsg(null);
+
+    // 🔹 Validación de cliente
+    if (!clientId) {
+      setError("Debes seleccionar un cliente.");
+      return;
+    }
+
+    // 🔹 Validación de filas completas
+    if (!rows.every((r) => r.routineId && r.day)) {
+      setError("Todas las filas deben tener una rutina y un día asignados.");
+      return;
+    }
+
+    // 🔹 Validación de duplicados
+    if (hasRowDuplicates) {
+      setError("No puedes asignar la misma rutina más de una vez en el mismo día.");
+      return;
+    }
+
+    setSaving(true);
     try {
       await Promise.all(
         rows.map((r) =>
@@ -101,13 +126,14 @@ export default function AssignRoutine() {
             dayofweek: r.day,
             notes: "",
             done: false,
-          })));
+          })
+        )
+      );
       setSuccessMsg("¡Rutina(s) asignada(s) con éxito!");
       setRows([{ routineId: "", day: "" }]);
-      // no limpio cliente para que asignes varias tandas al mismo
     } catch (e) {
       console.error(e);
-      setError("Error al asignar rutina(s).");
+      setError("Error al asignar rutina(s). Intenta de nuevo.");
     } finally {
       setSaving(false);
     }
@@ -146,7 +172,7 @@ export default function AssignRoutine() {
           </select>
         </div>
 
-        {/* Encabezado filas */}
+        {/* Filas */}
         <div className="rows-head">
           <span>Asignaciones</span>
           <div className="rows-actions">
@@ -156,7 +182,6 @@ export default function AssignRoutine() {
           </div>
         </div>
 
-        {/* Filas */}
         {loading ? (
           <div className="skeleton" />
         ) : (
@@ -201,7 +226,11 @@ export default function AssignRoutine() {
                 className="btn danger"
                 onClick={() => removeRow(idx)}
                 disabled={rows.length === 1}
-                title={rows.length === 1 ? "Debe existir al menos una fila" : "Eliminar fila"}
+                title={
+                  rows.length === 1
+                    ? "Debe existir al menos una fila"
+                    : "Eliminar fila"
+                }
               >
                 Eliminar
               </button>

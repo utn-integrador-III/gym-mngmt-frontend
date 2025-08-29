@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getExercises, deleteExercise, type Exercise } from "../../services/exercisesService";
-import "../../styles/trainers/createExercise.css";   // reutilizamos estilos base
-import "../../styles/trainers/deleteExercise.css";   // modal y detalles
+import "../../styles/trainers/createExercise.css";
+import "../../styles/trainers/deleteExercise.css";
 
 export default function DeleteExercise() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -13,19 +13,22 @@ export default function DeleteExercise() {
   const [ok, setOk] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Cargar ejercicios
   useEffect(() => {
     (async () => {
       try {
         const data = await getExercises();
         setExercises(data);
+        if (!data.find(e => e._id === selectedId)) setSelectedId("");
       } catch (e: any) {
         setError(e?.message || "Error cargando ejercicios");
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [selectedId]);
 
+  // Filtrado por búsqueda
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return q ? exercises.filter(e => e.name?.toLowerCase().includes(q)) : exercises;
@@ -37,19 +40,22 @@ export default function DeleteExercise() {
   );
 
   const openConfirm = () => {
-    if (!selectedId) return;
+    if (!selected) {
+      setError("Debes seleccionar un ejercicio válido para eliminar.");
+      return;
+    }
     setShowConfirm(true);
   };
 
   const handleDelete = async () => {
-    if (!selectedId) return;
+    if (!selected) return;
     setError(null);
     try {
       setDeleting(true);
-      await deleteExercise(selectedId);
-      setExercises(prev => prev.filter(e => e._id !== selectedId));
-      setSelectedId("");
-      setOk("Ejercicio eliminado ✅");
+      await deleteExercise(selected._id);
+      setExercises(prev => prev.filter(e => e._id !== selected._id));
+      setSelectedId(""); // limpiar selección
+      setOk(`Ejercicio "${selected.name}" eliminado ✅`);
       setTimeout(() => setOk(null), 2200);
     } catch (e: any) {
       setError(e?.message || "Error eliminando ejercicio");
@@ -96,6 +102,7 @@ export default function DeleteExercise() {
                 <option key={e._id} value={e._id}>{e.name}</option>
               ))}
             </select>
+            {!selectedId && <div className="error-text">Debes seleccionar un ejercicio</div>}
           </div>
 
           {selected && (
@@ -120,10 +127,10 @@ export default function DeleteExercise() {
             <button
               type="button"
               className="btn primary"
-              disabled={!selectedId}
+              disabled={!selected || deleting}
               onClick={openConfirm}
             >
-              Eliminar
+              {deleting ? "Eliminando…" : "Eliminar"}
             </button>
           </div>
         </div>
@@ -132,10 +139,10 @@ export default function DeleteExercise() {
       {ok && <div className="toast ok">{ok}</div>}
 
       {/* Modal de confirmación */}
-      {showConfirm && (
+      {showConfirm && selected && (
         <div className="modal" role="dialog" aria-modal="true">
           <div className="modal-card">
-            <h3>¿Eliminar “{selected?.name || "este ejercicio"}”?</h3>
+            <h3>¿Eliminar “{selected.name}”?</h3>
             <p style={{opacity:.85, marginTop:6}}>
               Esta acción no se puede deshacer.
             </p>

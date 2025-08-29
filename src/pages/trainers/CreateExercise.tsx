@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { createExercise } from "../../services/exercisesService";
 import "../../styles/trainers/createExercise.css";
-
-import { useNavigate } from "react-router-dom";  // ⬅️ arriba
+import { useNavigate } from "react-router-dom";
 
 const NAME_MAX = 60;
 const DESC_MAX = 320;
@@ -18,34 +17,46 @@ export default function CreateExercise() {
   const nameLen = name.trim().length;
   const descLen = description.trim().length;
 
-  const nameValid = nameLen >= 3 && nameLen <= NAME_MAX;
+  // VALIDACIONES
+  const nameValid =
+    nameLen >= 3 &&
+    nameLen <= NAME_MAX &&
+    /^[a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑ-]+$/.test(name.trim());
   const descValid = descLen <= DESC_MAX;
+
   const formValid = nameValid && descValid;
 
-  const namePct = useMemo(() => Math.min(100, Math.round((nameLen / NAME_MAX) * 100)), [nameLen]);
-  const descPct = useMemo(() => Math.min(100, Math.round((descLen / DESC_MAX) * 100)), [descLen]);
+  const namePct = useMemo(
+    () => Math.min(100, Math.round((nameLen / NAME_MAX) * 100)),
+    [nameLen]
+  );
+  const descPct = useMemo(
+    () => Math.min(100, Math.round((descLen / DESC_MAX) * 100)),
+    [descLen]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setOk(null);
+
     if (!formValid) {
-      setError("Revisa los campos marcados.");
+      setError("Revisa los campos con errores antes de continuar.");
       return;
     }
+
     try {
       setSaving(true);
       await createExercise({
         name: name.trim(),
         description: description.trim() || undefined,
       });
-      setOk("Ejercicio creado ✅");
+      setOk("✅ Ejercicio creado correctamente");
       setName("");
       setDescription("");
-      // ocultar el toast luego de 2.5s
       setTimeout(() => setOk(null), 2500);
     } catch (err: any) {
-      setError(err?.message ?? "Error creando ejercicio");
+      setError(err?.message ?? "Error al crear el ejercicio");
     } finally {
       setSaving(false);
     }
@@ -55,7 +66,9 @@ export default function CreateExercise() {
     <div className="create-wrap">
       <div className="card fancy">
         <div className="card-head">
-          <div className="logo-bubble" aria-hidden>🏋️</div>
+          <div className="logo-bubble" aria-hidden>
+            🏋️
+          </div>
           <div>
             <h2 className="title">Crear ejercicio</h2>
             <p className="subtitle">Agrega un nuevo ejercicio al catálogo.</p>
@@ -65,12 +78,15 @@ export default function CreateExercise() {
 
         <form className="form" onSubmit={handleSubmit} noValidate>
           {/* Nombre */}
-          <div className={`field ${!nameValid && nameLen ? "invalid" : ""}`}>
+          <div className={`field ${!nameValid && nameLen > 0 ? "invalid" : ""}`}>
             <label className="label">Nombre</label>
             <input
               className="input"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (error) setError(null);
+              }}
               placeholder="Ej: Push Ups"
               maxLength={NAME_MAX}
               required
@@ -80,8 +96,15 @@ export default function CreateExercise() {
               <span style={{ width: `${namePct}%` }} />
             </div>
             <div className="hint">
-              {nameLen}/{NAME_MAX} — mínimo 3 caracteres.
+              {nameLen}/{NAME_MAX} — mínimo 3 caracteres. Solo letras, números y
+              guiones.
             </div>
+            {!nameValid && nameLen > 0 && (
+              <div className="error-text">
+                El nombre debe tener entre 3 y 60 caracteres y no contener
+                símbolos especiales.
+              </div>
+            )}
           </div>
 
           {/* Descripción */}
@@ -90,7 +113,10 @@ export default function CreateExercise() {
             <textarea
               className="textarea"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (error) setError(null);
+              }}
               placeholder="Opcional (máx. 320)"
               maxLength={DESC_MAX}
               aria-invalid={!descValid}
@@ -101,9 +127,14 @@ export default function CreateExercise() {
             <div className="hint">
               {descLen}/{DESC_MAX}
             </div>
+            {!descValid && (
+              <div className="error-text">
+                La descripción no puede superar los {DESC_MAX} caracteres.
+              </div>
+            )}
           </div>
 
-          {/* Preview mini */}
+          {/* Preview */}
           {nameLen > 0 && (
             <div className="preview">
               <div className="preview-title">Vista rápida</div>
@@ -122,10 +153,10 @@ export default function CreateExercise() {
           {error && <div className="msg error">{error}</div>}
 
           <div className="actions">
-          <button
+            <button
               type="button"
               className="btn ghost"
-              onClick={() => navigate(-1)}   // ⬅️ antes: history.back()
+              onClick={() => navigate(-1)}
             >
               Cancelar
             </button>
@@ -140,7 +171,7 @@ export default function CreateExercise() {
         </form>
       </div>
 
-      {/* Toast de éxito */}
+      {/* Toast éxito */}
       {ok && <div className="toast ok">{ok}</div>}
     </div>
   );

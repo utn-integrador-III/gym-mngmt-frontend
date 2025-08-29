@@ -113,3 +113,12 @@
   .register-form { padding: 22px; }
   .register-title   { font-size: 1.4rem; }
 }
+.input-error {
+  border: 1px solid #e63946;
+}
+
+.error-text {
+  color: #e63946;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}

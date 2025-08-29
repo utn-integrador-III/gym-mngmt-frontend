@@ -24,6 +24,16 @@ export default function ClientTodayRoutine() {
 
   const days = useMemo(() => ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'], []);
 
+  // Validación para cambiar el día
+  const handleSetDay = (newDay: string) => {
+    if (!days.includes(newDay)) {
+      alert('Día inválido seleccionado');
+      return;
+    }
+    setDay(newDay);
+  };
+
+  // Cargar rutinas asignadas
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -44,49 +54,77 @@ export default function ClientTodayRoutine() {
         setRoutinesMap(map);
       } catch (e) {
         console.error(e);
-        setError('No se pudo cargar las rutinas... o tal vez no tienes rutinas asignadas, por favor busca algún entrenador');
+        setError(
+          'No se pudo cargar las rutinas. Verifica tu conexión o contacta con un entrenador.'
+        );
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
+  // Detectar rutina seleccionada según el día
   useEffect(() => {
     const match = assignedRoutines.find((r) => r.dayofweek === day) || null;
     setSelectedRoutine(match);
     setNoteInput(match?.notes ?? '');
   }, [day, assignedRoutines]);
 
+  // Validar y alternar estado "done"
   const handleToggleDone = async () => {
     if (!selectedRoutine || updatingDone) return;
+    if (!selectedRoutine._id) {
+      alert('Error: rutina inválida.');
+      return;
+    }
+
     setUpdatingDone(true);
     try {
       const updated = await updateAssignedRoutine(selectedRoutine._id, {
         done: !selectedRoutine.done,
       });
-      setAssignedRoutines((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+      setAssignedRoutines((prev) =>
+        prev.map((r) => (r._id === updated._id ? updated : r))
+      );
     } catch (e) {
       console.error(e);
-      alert('Error al actualizar el estado');
+      alert('Error al actualizar el estado de la rutina.');
     } finally {
       setUpdatingDone(false);
     }
   };
 
+  // Validar y guardar nota
   const handleSaveNote = async () => {
     if (!selectedRoutine || savingNote) return;
+
+    const trimmedNote = noteInput.trim();
+    if (trimmedNote.length === 0) {
+      alert('La nota no puede estar vacía o solo contener espacios.');
+      return;
+    }
+    if (trimmedNote.length > 500) {
+      alert('La nota no puede superar los 500 caracteres.');
+      return;
+    }
+
     setSavingNote(true);
     try {
-      const updated = await updateAssignedRoutine(selectedRoutine._id, { notes: noteInput });
-      setAssignedRoutines((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+      const updated = await updateAssignedRoutine(selectedRoutine._id, {
+        notes: trimmedNote,
+      });
+      setAssignedRoutines((prev) =>
+        prev.map((r) => (r._id === updated._id ? updated : r))
+      );
     } catch (e) {
       console.error(e);
-      alert('Error al guardar la nota');
+      alert('Error al guardar la nota.');
     } finally {
       setSavingNote(false);
     }
   };
 
+  // Progreso del usuario
   const progress = useMemo(() => {
     const total = assignedRoutines.length || 1;
     const done = assignedRoutines.filter((r) => r.done).length;
@@ -104,7 +142,7 @@ export default function ClientTodayRoutine() {
             role="tab"
             aria-selected={d === day}
             className={`day-tab ${d === day ? 'active-day' : ''}`}
-            onClick={() => setDay(d)}
+            onClick={() => handleSetDay(d)}
           >
             {d.charAt(0).toUpperCase() + d.slice(1)}
           </button>
@@ -140,7 +178,9 @@ export default function ClientTodayRoutine() {
                   />
                   <span className="slider" />
                 </label>
-                <span className="toggle-label">{selectedRoutine?.done ? 'Done' : 'Pending'}</span>
+                <span className="toggle-label">
+                  {selectedRoutine?.done ? 'Done' : 'Pending'}
+                </span>
               </div>
             </div>
 
@@ -170,7 +210,10 @@ export default function ClientTodayRoutine() {
               <div className="notes-actions">
                 <button
                   onClick={handleSaveNote}
-                  disabled={savingNote || noteInput === (selectedRoutine.notes ?? '')}
+                  disabled={
+                    savingNote ||
+                    noteInput.trim() === (selectedRoutine.notes ?? '')
+                  }
                 >
                   {savingNote ? 'Saving…' : 'Save Note'}
                 </button>

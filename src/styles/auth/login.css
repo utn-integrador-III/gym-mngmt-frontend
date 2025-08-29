@@ -249,3 +249,12 @@
   .title { font-size: 1.35rem; }
   .social-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+.input-error {
+  border: 1px solid #e63946;
+}
+
+.error-text {
+  color: #e63946;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
