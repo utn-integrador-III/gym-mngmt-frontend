@@ -8,7 +8,7 @@ export default function Register() {
   const [username, setUsername] = useState('');
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'Client' | 'Trainer'>('Client');
+  const [role, setRole] = useState('Client');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -71,7 +71,7 @@ export default function Register() {
 
   return (
     <div className="register-container">
-      <h2 className="register-title">New User</h2>
+      <h2 className="register-title">Welcome to the gym!</h2>
 
       <form className="register-form" onSubmit={handleSubmit}>
         {/* Name */}
@@ -125,15 +125,6 @@ export default function Register() {
         />
         {errors.photo && <p className="error-text">{errors.photo}</p>}
 
-        {/* Role */}
-        <select
-          className="register-input"
-          value={role}
-          onChange={(e) => setRole(e.target.value as 'Client' | 'Trainer')}
-        >
-          <option value="Client">Client</option>
-          <option value="Trainer">Trainer</option>
-        </select>
 
         {/* Email */}
         <input

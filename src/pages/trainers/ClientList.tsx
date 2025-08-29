@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/trainers/clientList.css";
 
 import { usersApi, type User } from "../../services/usersService";
-import { getAssignedRoutines, AssignedRoutine } from "../../services/assignedRoutinesService";
+import { getAssignedRoutines, type AssignedRoutine } from "../../services/assignedRoutinesService";
 
 export default function ClientList() {
   const navigate = useNavigate();
@@ -12,11 +12,51 @@ export default function ClientList() {
   const PROGRESS_PATH = (id: string) => `/trainer/clients/${id}/progress`;
   const ASSIGN_PATH = (id: string) => `/AssignRoutine?client=${id}`;
 
-  const [clients, setClients] = useState<User[]>([]);
+  // Para mayor tolerancia, usamos User | any
+  const [clients, setClients] = useState<(User & { _id: string })[]>([]);
   const [assigned, setAssigned] = useState<AssignedRoutine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
+
+  // ---------- Helpers de normalización ----------
+  const ensureArray = (x: any): any[] => {
+    if (Array.isArray(x)) return x;
+    if (Array.isArray(x?.data)) return x.data;
+    if (Array.isArray(x?.results)) return x.results;
+    if (Array.isArray(x?.items)) return x.items;
+    return [];
+  };
+
+  const asStringId = (u: any): string => {
+    if (typeof u?._id === "string") return u._id;
+    if (typeof u?.id === "string") return u.id;
+    if (typeof u?.id === "number") return String(u.id);
+    // Mongo puede venir como { _id: { $oid: "..." } }
+    const oid = u?._id?.$oid || u?.id?.$oid;
+    return typeof oid === "string" ? oid : "";
+  };
+
+  const isClientRole = (role: any) => {
+    const r = String(role || "").toLowerCase();
+    return r === "client" || r === "cliente" || r === "user" || r === "cliente_app"; // ajusta si usas otro
+  };
+
+  const deriveEmail = (u: any) =>
+    u?.email || u?.mail || u?.contact?.email || "";
+
+  const deriveUsername = (u: any) =>
+    u?.username || u?.name || u?.fullName || "";
+
+  const derivePhone = (u: any) =>
+    typeof u?.phone === "string"
+      ? u.phone
+      : u?.phone?.toString?.() || u?.contact?.phone || "";
+
+  const derivePhoto = (u: any) =>
+    u?.photo || u?.photo_url || u?.avatarUrl || u?.avatar || "";
+
+  const asBool = (v: any) => !!v;
 
   // 🔹 Validar entrada del buscador
   const handleSearch = (value: string) => {
@@ -29,22 +69,73 @@ export default function ClientList() {
       setLoading(true);
       setError(null);
       try {
-        const [clts, asg] = await Promise.all([usersApi.list(), getAssignedRoutines()]);
+        // Puedes intentar server-side filtering si tu service lo soporta:
+        // const cltsRaw = await usersApi.list({ role: "Client" } as any);
+        const cltsRaw = await usersApi.list();
+        const asgRaw = await getAssignedRoutines();
 
-        // Validar que los datos sean arrays
-        if (!Array.isArray(clts) || !Array.isArray(asg)) {
-          throw new Error("Datos inválidos recibidos desde el servidor.");
-        }
+        const cltsArr = ensureArray(cltsRaw);
+        const asgArr = ensureArray(asgRaw);
 
-        // Filtrar clientes con ID válido
-        const validClients = clts.filter((c) => typeof c._id === "string" && c._id.trim() !== "");
-        const validAssigned = asg.filter((a) => typeof a.id_client === "string" && a.id_client.trim() !== "");
+        // Normaliza usuarios -> solo clientes
+        const normalizedClients = cltsArr
+          .map((u) => {
+            const _id = asStringId(u);
+            if (!_id) return null;
+            return {
+              ...u,
+              _id,
+              // Asegura campos usados por la UI:
+              email: deriveEmail(u),
+              username: deriveUsername(u),
+              phone: derivePhone(u),
+              photo: derivePhoto(u),
+              role: u?.role,
+            };
+          })
+          .filter(Boolean) as (User & { _id: string })[];
 
-        setClients(validClients);
-        setAssigned(validAssigned);
-      } catch (e) {
+        // FILTRO rol de "cliente"
+        const onlyClients =
+          normalizedClients.filter((c) => isClientRole((c as any).role)) ||
+          [];
+
+        // Si no hay rol en tus usuarios omitir el filtro:
+        const finalClients =
+          onlyClients.length > 0 ? onlyClients : normalizedClients;
+
+        // Normaliza asignaciones
+        const normalizedAssigned = asgArr
+          .map((a) => {
+            const idClient: string =
+              typeof a?.id_client === "string"
+                ? a.id_client
+                : asStringId(a?.id_client);
+            if (!idClient) return null;
+            return {
+              ...a,
+              id_client: idClient,
+              done: asBool(a?.done),
+            };
+          })
+          .filter(Boolean) as AssignedRoutine[];
+
+        setClients(finalClients);
+        setAssigned(normalizedAssigned);
+      } catch (e: any) {
         console.error("Error cargando datos:", e);
-        setError("No se pudieron cargar los clientes. Verifique su conexión.");
+        const msg =
+          typeof e?.message === "string"
+            ? e.message
+            : "No se pudieron cargar los clientes. Verifique su conexión.";
+        // Mapea errores típicos del http genérico
+        if (/\[401\]/.test(msg)) {
+          setError("No autorizado (401). Inicia sesión e inténtalo de nuevo.");
+        } else if (/\[404\]/.test(msg)) {
+          setError("Recurso no encontrado (404). Revisa la ruta del servicio.");
+        } else {
+          setError(msg);
+        }
       } finally {
         setLoading(false);
       }
@@ -53,10 +144,13 @@ export default function ClientList() {
 
   // 🔹 Calcular progreso por cliente
   const progressByClient = useMemo(() => {
-    const map: Record<string, { total: number; done: number; percent: number }> = {};
+    const map: Record<
+      string,
+      { total: number; done: number; percent: number }
+    > = {};
     for (const r of assigned) {
-      if (!r?.id_client) continue;
-      const id = r.id_client;
+      const id = r?.id_client;
+      if (!id) continue;
       if (!map[id]) map[id] = { total: 0, done: 0, percent: 0 };
       map[id].total += 1;
       if (r.done) map[id].done += 1;
@@ -72,17 +166,17 @@ export default function ClientList() {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return clients;
-    return clients.filter((c) => {
-      const username = c.username?.toLowerCase() || "";
-      const phone = c.phone?.toLowerCase?.() || "";
-      const email = (c as any).email?.toLowerCase?.() || "";
+    return clients.filter((c: any) => {
+      const username = String(c?.username || "").toLowerCase();
+      const phone = String(c?.phone || "").toLowerCase();
+      const email = String(c?.email || "").toLowerCase();
       return username.includes(s) || phone.includes(s) || email.includes(s);
     });
   }, [q, clients]);
 
   // 🔹 Ordenar clientes según porcentaje de progreso
   const ordered = useMemo(() => {
-    return [...filtered].sort((a, b) => {
+    return [...filtered].sort((a: any, b: any) => {
       const pa = progressByClient[a._id]?.percent ?? 0;
       const pb = progressByClient[b._id]?.percent ?? 0;
       return pb - pa;
@@ -92,19 +186,14 @@ export default function ClientList() {
   // 🔹 Función para iniciales del avatar
   const initials = (username?: string) =>
     (username ?? "??")
+      .toString()
       .split(/\s+/)
       .slice(0, 2)
       .map((p) => (p[0]?.toUpperCase() ?? ""))
       .join("") || "??";
 
   // 🔹 Navegación segura
-  const handleProgress = (id: string) => {
-    if (!id) {
-      alert("ID inválido para ver el progreso.");
-      return;
-    }
-    navigate(PROGRESS_PATH(id));
-  };
+  
 
   const handleAssign = (id: string) => {
     if (!id) {
@@ -145,13 +234,15 @@ export default function ClientList() {
         <div className="msg warn">No hay clientes que coincidan con la búsqueda.</div>
       ) : (
         <div className="grid">
-          {ordered.map((c) => {
+          {ordered.map((c: any) => {
             const prog = progressByClient[c._id]?.percent ?? 0;
             const total = progressByClient[c._id]?.total ?? 0;
             const done = progressByClient[c._id]?.done ?? 0;
 
-            const hasPhoto = Boolean(c.photo);
-            const photoSrc = usersApi.photoUrl(c._id);
+            const hasPhoto = !!derivePhoto(c);
+            // Usa tu helper si existe, si no, cae al campo photo
+            const photoSrc =
+              typeof usersApi.photoUrl === "function" ? usersApi.photoUrl(c._id) : derivePhoto(c);
 
             return (
               <div className="card glass" key={c._id}>
@@ -162,7 +253,8 @@ export default function ClientList() {
                       alt={c.username || "Cliente"}
                       className="avatar"
                       onError={(e) => {
-                        e.currentTarget.style.display = "none";
+                        // Esconde la imagen rota para mostrar fallback
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
                       }}
                     />
                   ) : (
@@ -173,9 +265,7 @@ export default function ClientList() {
 
                   <div className="info">
                     <div className="name">{c.username || "Sin nombre"}</div>
-                    {("email" in c && (c as any).email) && (
-                      <div className="sub em">{(c as any).email}</div>
-                    )}
+                    {c.email && <div className="sub em">{c.email}</div>}
                     {c.phone && <div className="sub">{c.phone}</div>}
                   </div>
                 </div>
@@ -194,9 +284,7 @@ export default function ClientList() {
                 </div>
 
                 <div className="actions">
-                  <button className="btn ghost" onClick={() => handleProgress(c._id)}>
-                    Ver progreso
-                  </button>
+                 
                   <button className="btn primary" onClick={() => handleAssign(c._id)}>
                     Asignar rutina
                   </button>
